@@ -1,0 +1,63 @@
+# === Project-specific ===
+CLAUDE.md
+sprint-plan.md
+
+# === Next.js / Node ===
+node_modules/
+.next/
+out/
+.env
+.env.local
+.env.*.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# === Java / Spring Boot ===
+target/
+*.class
+*.jar
+*.war
+*.ear
+*.logs
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+*.iml
+.idea/
+*.swp
+
+# === Python / FastAPI ===
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.venv/
+venv/
+env/
+.env
+*.egg-info/
+dist/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+
+# === Docker ===
+docker-volumes/
+*.log
+
+# === OS ===
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# === IDE ===
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
