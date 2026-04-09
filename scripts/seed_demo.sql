@@ -201,3 +201,117 @@ FROM (VALUES
 JOIN diseases d ON d.canonical_id = v.dis_cid
 JOIN treatments t ON t.canonical_id = v.trt_cid
 ON CONFLICT (disease_id, treatment_id, treatment_role) DO NOTHING;
+
+-- ============================================================
+-- Sprint 3C.1 — Case 01: "After every meal" (EASY, 80 XP)
+-- Linked to DIS_CHOLELITHIASIS_001 / ANAT_GALLBLADDER_001
+-- 4 clues, 4 questions, 4 options each
+-- ============================================================
+
+INSERT INTO cases (case_id, title, subtitle, linked_anatomy_id, linked_disease_id, difficulty, estimated_minutes, xp_reward, status)
+SELECT 'MC_GALLBLADDER_001', 'After every meal',
+  'A 42-year-old woman presents with sudden right upper quadrant pain after dinner.',
+  ap.id, d.id, 'EASY', 10, 80, 'ACTIVE'
+FROM anatomy_parts ap, diseases d
+WHERE ap.canonical_id = 'ANAT_GALLBLADDER_001' AND d.canonical_id = 'DIS_CHOLELITHIASIS_001'
+ON CONFLICT (case_id) DO NOTHING;
+
+-- Vignette
+INSERT INTO case_vignettes (case_id, patient_age, patient_sex, presenting_complaint, history_text, full_vignette_text)
+SELECT c.id, 42, 'Female',
+  'Sudden right upper quadrant pain after a large meal',
+  'The patient describes episodic postprandial pain over the past 3 months, worsening after fatty meals. No fever. No jaundice.',
+  'A 42-year-old woman presents to the emergency department with sudden-onset right upper quadrant pain that started 2 hours after a large holiday dinner. She describes the pain as crampy and radiating to her right shoulder. She reports similar but milder episodes over the past 3 months, always after fatty meals. She has no fever, no jaundice, and no vomiting.'
+FROM cases c WHERE c.case_id = 'MC_GALLBLADDER_001'
+  AND NOT EXISTS (SELECT 1 FROM case_vignettes cv WHERE cv.case_id = c.id);
+
+-- Clues
+INSERT INTO case_clues (case_id, clue_type, label, value, is_abnormal, display_order)
+SELECT c.id, v.clue_type, v.label, v.value, v.is_abnormal, v.display_order
+FROM cases c
+CROSS JOIN (VALUES
+  ('vital',   'Temperature',  '36.8°C',          false, 1),
+  ('lab',     'WBC',          '7.2 × 10⁹/L',    false, 2),
+  ('lab',     'ALT',          '28 U/L',          false, 3),
+  ('imaging', 'Ultrasound',   'Multiple gallstones, no wall thickening', true, 4)
+) AS v(clue_type, label, value, is_abnormal, display_order)
+WHERE c.case_id = 'MC_GALLBLADDER_001'
+  AND NOT EXISTS (
+    SELECT 1 FROM case_clues cc WHERE cc.case_id = c.id AND cc.display_order = v.display_order
+  );
+
+-- Q1
+INSERT INTO case_questions (case_id, step_number, question_text, question_type)
+SELECT c.id, 1, 'What is the most likely diagnosis?', 'DIAGNOSIS'
+FROM cases c WHERE c.case_id = 'MC_GALLBLADDER_001'
+  AND NOT EXISTS (SELECT 1 FROM case_questions cq WHERE cq.case_id = c.id AND cq.step_number = 1);
+
+INSERT INTO case_options (question_id, option_key, option_text, is_correct)
+SELECT q.id, v.key, v.text, v.correct
+FROM case_questions q
+JOIN cases c ON c.id = q.case_id
+CROSS JOIN (VALUES
+  ('A', 'Acute cholecystitis',  false),
+  ('B', 'Cholelithiasis',       true),
+  ('C', 'Acute pancreatitis',   false),
+  ('D', 'Peptic ulcer disease', false)
+) AS v(key, text, correct)
+WHERE c.case_id = 'MC_GALLBLADDER_001' AND q.step_number = 1
+  AND NOT EXISTS (SELECT 1 FROM case_options co WHERE co.question_id = q.id AND co.option_key = v.key);
+
+-- Q2
+INSERT INTO case_questions (case_id, step_number, question_text, question_type)
+SELECT c.id, 2, 'Which clue most supports your diagnosis?', 'REASONING'
+FROM cases c WHERE c.case_id = 'MC_GALLBLADDER_001'
+  AND NOT EXISTS (SELECT 1 FROM case_questions cq WHERE cq.case_id = c.id AND cq.step_number = 2);
+
+INSERT INTO case_options (question_id, option_key, option_text, is_correct)
+SELECT q.id, v.key, v.text, v.correct
+FROM case_questions q
+JOIN cases c ON c.id = q.case_id
+CROSS JOIN (VALUES
+  ('A', 'Normal temperature rules out infection',          false),
+  ('B', 'Ultrasound showing multiple gallstones',          true),
+  ('C', 'Normal WBC excludes biliary pathology',           false),
+  ('D', 'Pain radiating to shoulder suggests cardiac cause', false)
+) AS v(key, text, correct)
+WHERE c.case_id = 'MC_GALLBLADDER_001' AND q.step_number = 2
+  AND NOT EXISTS (SELECT 1 FROM case_options co WHERE co.question_id = q.id AND co.option_key = v.key);
+
+-- Q3
+INSERT INTO case_questions (case_id, step_number, question_text, question_type)
+SELECT c.id, 3, 'What is the primary underlying mechanism?', 'MECHANISM'
+FROM cases c WHERE c.case_id = 'MC_GALLBLADDER_001'
+  AND NOT EXISTS (SELECT 1 FROM case_questions cq WHERE cq.case_id = c.id AND cq.step_number = 3);
+
+INSERT INTO case_options (question_id, option_key, option_text, is_correct)
+SELECT q.id, v.key, v.text, v.correct
+FROM case_questions q
+JOIN cases c ON c.id = q.case_id
+CROSS JOIN (VALUES
+  ('A', 'Bile supersaturation with cholesterol crystallisation', true),
+  ('B', 'Cystic duct obstruction causing inflammation',         false),
+  ('C', 'Bacterial infection ascending from the duodenum',      false),
+  ('D', 'Autoimmune destruction of bile duct epithelium',       false)
+) AS v(key, text, correct)
+WHERE c.case_id = 'MC_GALLBLADDER_001' AND q.step_number = 3
+  AND NOT EXISTS (SELECT 1 FROM case_options co WHERE co.question_id = q.id AND co.option_key = v.key);
+
+-- Q4
+INSERT INTO case_questions (case_id, step_number, question_text, question_type)
+SELECT c.id, 4, 'What is the first-line treatment for symptomatic gallstones?', 'TREATMENT'
+FROM cases c WHERE c.case_id = 'MC_GALLBLADDER_001'
+  AND NOT EXISTS (SELECT 1 FROM case_questions cq WHERE cq.case_id = c.id AND cq.step_number = 4);
+
+INSERT INTO case_options (question_id, option_key, option_text, is_correct)
+SELECT q.id, v.key, v.text, v.correct
+FROM case_questions q
+JOIN cases c ON c.id = q.case_id
+CROSS JOIN (VALUES
+  ('A', 'Ursodiol dissolution therapy',        false),
+  ('B', 'Laparoscopic cholecystectomy',         true),
+  ('C', 'ERCP with sphincterotomy',             false),
+  ('D', 'Watchful waiting with dietary changes', false)
+) AS v(key, text, correct)
+WHERE c.case_id = 'MC_GALLBLADDER_001' AND q.step_number = 4
+  AND NOT EXISTS (SELECT 1 FROM case_options co WHERE co.question_id = q.id AND co.option_key = v.key);
