@@ -43,6 +43,42 @@ export default function LandingPage() {
           </Link>
         </div>
       </section>
+
+      {/* 4-pillar strip */}
+      <section className="px-6 py-16 max-w-5xl mx-auto">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
+          {PILLARS.map((pillar) => (
+            <div key={pillar.title} className="flex flex-col items-center text-center gap-3 p-4">
+              <span className="text-3xl">{pillar.icon}</span>
+              <h3 className="text-sm font-semibold text-text-primary">{pillar.title}</h3>
+              <p className="text-xs text-text-secondary leading-relaxed">{pillar.description}</p>
+            </div>
+          ))}
+        </div>
+      </section>
     </div>
   );
 }
+
+const PILLARS = [
+  {
+    title: "Explore",
+    icon: "\u{1F9EC}",
+    description: "Click the body map. Navigate anatomy systems. See every structure in context.",
+  },
+  {
+    title: "Connect",
+    icon: "\u{1F517}",
+    description: "Trace the links from structure to disease, mechanism, and treatment.",
+  },
+  {
+    title: "Play",
+    icon: "\u{1F9EA}",
+    description: "Solve mystery cases. Diagnose, reason, and treat — then earn XP.",
+  },
+  {
+    title: "Understand",
+    icon: "\u{1F4A1}",
+    description: "Read grounded explanations backed by NICE, PubMed, and MedlinePlus evidence.",
+  },
+];
