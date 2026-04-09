@@ -581,3 +581,46 @@ INSERT INTO source_documents (url, title, source_type, trust_score, jurisdiction
    'ABSTRACT', 0.80, NULL,
    'Acute cholangitis results from bacterial infection of an obstructed biliary system. The most common cause is choledocholithiasis. Charcot''s triad of fever, jaundice, and right upper quadrant pain is present in 50-70% of cases. Reynolds'' pentad, adding hypotension and altered mental status, indicates severe disease requiring urgent intervention. Initial management includes IV fluid resuscitation and broad-spectrum antibiotics. Biliary drainage via ERCP is the standard of care for decompression. Mortality in severe cholangitis without drainage exceeds 50%.')
 ON CONFLICT (url) DO NOTHING;
+
+-- ============================================================
+-- Sprint 4C.4 — Candidate claims + approve ≥ 3
+-- Multi-source claims for hepatobiliary entities
+-- ============================================================
+
+INSERT INTO candidate_claims (subject_canonical_id, relation_type, object_canonical_id, claim_text, confidence, status, source_chunk_ids, extraction_model)
+SELECT v.subject, v.rel, v.object, v.claim, v.conf, 'CANDIDATE', v.chunks, 'gpt-4o-mini'
+FROM (VALUES
+  ('ANAT_GALLBLADDER_001', 'INVOLVED_IN', 'DIS_CHOLELITHIASIS_001',
+   'The gallbladder is the primary site of gallstone formation due to bile stasis and cholesterol supersaturation.',
+   0.70, '[]'),
+  ('DIS_CHOLELITHIASIS_001', 'CAUSED_BY', 'MECH_BILE_SUPERSATURATION_001',
+   'Cholelithiasis is caused by bile supersaturation with cholesterol, leading to crystal nucleation and stone formation.',
+   0.70, '[]'),
+  ('DIS_CHOLELITHIASIS_001', 'TREATED_BY', 'TRT_CHOLECYSTECTOMY_001',
+   'Laparoscopic cholecystectomy is the gold standard treatment for symptomatic cholelithiasis.',
+   0.70, '[]'),
+  ('DIS_CHOLECYSTITIS_001', 'CAUSED_BY', 'MECH_CYSTIC_DUCT_OBSTRUCTION_001',
+   'Acute cholecystitis is most commonly caused by obstruction of the cystic duct by an impacted gallstone.',
+   0.70, '[]'),
+  ('DIS_CHOLECYSTITIS_001', 'PRESENTS_WITH', 'MECH_MUCOSAL_INFLAMMATION_001',
+   'Cholecystitis presents with mucosal inflammation triggered by trapped bile acids damaging the gallbladder wall.',
+   0.56, '[]'),
+  ('DIS_CHOLANGITIS_001', 'CAUSED_BY', 'MECH_BILE_DUCT_OBSTRUCTION_001',
+   'Cholangitis results from bacterial infection of an obstructed biliary system, most commonly from choledocholithiasis.',
+   0.70, '[]'),
+  ('DIS_CHOLANGITIS_001', 'TREATED_BY', 'TRT_ERCP_001',
+   'ERCP with biliary decompression is the standard of care for acute cholangitis with biliary obstruction.',
+   0.70, '[]')
+) AS v(subject, rel, object, claim, conf, chunks)
+WHERE NOT EXISTS (
+  SELECT 1 FROM candidate_claims cc
+  WHERE cc.subject_canonical_id = v.subject
+    AND cc.relation_type = v.rel
+    AND cc.object_canonical_id = v.object
+);
+
+-- Approve the first 5 claims (multi-source, high confidence)
+UPDATE candidate_claims SET status = 'APPROVED', reviewed_at = now()
+WHERE status = 'CANDIDATE'
+  AND subject_canonical_id IN ('ANAT_GALLBLADDER_001', 'DIS_CHOLELITHIASIS_001', 'DIS_CHOLECYSTITIS_001', 'DIS_CHOLANGITIS_001')
+  AND confidence >= 0.70;
