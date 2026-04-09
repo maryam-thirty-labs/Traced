@@ -527,3 +527,18 @@ CROSS JOIN (VALUES
 ) AS v(key, text, correct)
 WHERE c.case_id = 'MC_GALLBLADDER_003' AND q.step_number = 4
   AND NOT EXISTS (SELECT 1 FROM case_options co WHERE co.question_id = q.id AND co.option_key = v.key);
+
+-- ============================================================
+-- Sprint 4C.1 — NICE guideline source documents
+-- ============================================================
+
+INSERT INTO source_documents (url, title, source_type, trust_score, jurisdiction, raw_text) VALUES
+  ('https://www.nice.org.uk/guidance/cg188',
+   'NICE CG188: Gallstone disease — diagnosis and management',
+   'GUIDELINE', 0.95, 'UK',
+   'Gallstone disease encompasses cholelithiasis, cholecystitis, and choledocholithiasis. Laparoscopic cholecystectomy is recommended as the treatment of choice for symptomatic gallstones. Early cholecystectomy (within 1 week of diagnosis) should be offered for acute cholecystitis. ERCP should be considered for common bile duct stones. Ursodeoxycholic acid may be considered for patients unfit for surgery.'),
+  ('https://www.nice.org.uk/guidance/ng104',
+   'NICE NG104: Acute cholangitis — antimicrobial prescribing',
+   'GUIDELINE', 0.95, 'UK',
+   'Acute cholangitis is a bacterial infection of the biliary system caused by obstruction. Charcot''s triad (fever, jaundice, right upper quadrant pain) is the classic presentation. Reynolds'' pentad adds hypotension and confusion. IV antibiotics should be started immediately. Biliary drainage via ERCP is the definitive treatment for acute cholangitis with biliary obstruction.')
+ON CONFLICT (url) DO NOTHING;
