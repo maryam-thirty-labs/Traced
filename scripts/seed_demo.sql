@@ -315,3 +315,108 @@ CROSS JOIN (VALUES
 ) AS v(key, text, correct)
 WHERE c.case_id = 'MC_GALLBLADDER_001' AND q.step_number = 4
   AND NOT EXISTS (SELECT 1 FROM case_options co WHERE co.question_id = q.id AND co.option_key = v.key);
+
+-- ============================================================
+-- Sprint 3C.2 — Case 02: "The morning catch" (MEDIUM, 100 XP)
+-- Linked to DIS_CHOLECYSTITIS_001 / ANAT_GALLBLADDER_001
+-- ============================================================
+
+INSERT INTO cases (case_id, title, subtitle, linked_anatomy_id, linked_disease_id, difficulty, estimated_minutes, xp_reward, status)
+SELECT 'MC_GALLBLADDER_002', 'The morning catch',
+  'A 55-year-old man presents with persistent RUQ pain and fever.',
+  ap.id, d.id, 'MEDIUM', 15, 100, 'ACTIVE'
+FROM anatomy_parts ap, diseases d
+WHERE ap.canonical_id = 'ANAT_GALLBLADDER_001' AND d.canonical_id = 'DIS_CHOLECYSTITIS_001'
+ON CONFLICT (case_id) DO NOTHING;
+
+INSERT INTO case_vignettes (case_id, patient_age, patient_sex, presenting_complaint, history_text, full_vignette_text)
+SELECT c.id, 55, 'Male',
+  'Persistent right upper quadrant pain with fever',
+  'Pain began 18 hours ago and has not resolved. History of gallstones diagnosed 2 years ago. No jaundice.',
+  'A 55-year-old man presents with persistent right upper quadrant pain that began 18 hours ago after eating fried fish. Unlike previous biliary colic episodes, this pain has not resolved. He is febrile at 38.4°C. He has a known history of gallstones diagnosed 2 years ago but declined surgery. He denies jaundice or dark urine.'
+FROM cases c WHERE c.case_id = 'MC_GALLBLADDER_002'
+  AND NOT EXISTS (SELECT 1 FROM case_vignettes cv WHERE cv.case_id = c.id);
+
+INSERT INTO case_clues (case_id, clue_type, label, value, is_abnormal, display_order)
+SELECT c.id, v.clue_type, v.label, v.value, v.is_abnormal, v.display_order
+FROM cases c
+CROSS JOIN (VALUES
+  ('vital',   'Temperature', '38.4°C',           true,  1),
+  ('lab',     'WBC',         '14.8 × 10⁹/L',    true,  2),
+  ('lab',     'Bilirubin',   '18 µmol/L',        false, 3),
+  ('imaging', 'Ultrasound',  'Gallstones with wall thickening >4mm and pericholecystic fluid', true, 4)
+) AS v(clue_type, label, value, is_abnormal, display_order)
+WHERE c.case_id = 'MC_GALLBLADDER_002'
+  AND NOT EXISTS (SELECT 1 FROM case_clues cc WHERE cc.case_id = c.id AND cc.display_order = v.display_order);
+
+-- Q1
+INSERT INTO case_questions (case_id, step_number, question_text, question_type)
+SELECT c.id, 1, 'What is the most likely diagnosis?', 'DIAGNOSIS'
+FROM cases c WHERE c.case_id = 'MC_GALLBLADDER_002'
+  AND NOT EXISTS (SELECT 1 FROM case_questions cq WHERE cq.case_id = c.id AND cq.step_number = 1);
+
+INSERT INTO case_options (question_id, option_key, option_text, is_correct)
+SELECT q.id, v.key, v.text, v.correct
+FROM case_questions q JOIN cases c ON c.id = q.case_id
+CROSS JOIN (VALUES
+  ('A', 'Uncomplicated cholelithiasis', false),
+  ('B', 'Acute cholecystitis',          true),
+  ('C', 'Ascending cholangitis',        false),
+  ('D', 'Acute pancreatitis',           false)
+) AS v(key, text, correct)
+WHERE c.case_id = 'MC_GALLBLADDER_002' AND q.step_number = 1
+  AND NOT EXISTS (SELECT 1 FROM case_options co WHERE co.question_id = q.id AND co.option_key = v.key);
+
+-- Q2
+INSERT INTO case_questions (case_id, step_number, question_text, question_type)
+SELECT c.id, 2, 'Which combination of findings distinguishes this from simple biliary colic?', 'REASONING'
+FROM cases c WHERE c.case_id = 'MC_GALLBLADDER_002'
+  AND NOT EXISTS (SELECT 1 FROM case_questions cq WHERE cq.case_id = c.id AND cq.step_number = 2);
+
+INSERT INTO case_options (question_id, option_key, option_text, is_correct)
+SELECT q.id, v.key, v.text, v.correct
+FROM case_questions q JOIN cases c ON c.id = q.case_id
+CROSS JOIN (VALUES
+  ('A', 'Fever, raised WBC, and persistent pain >6 hours', true),
+  ('B', 'Elevated bilirubin with dark urine',              false),
+  ('C', 'Normal ultrasound with epigastric tenderness',    false),
+  ('D', 'Postprandial pain that resolves within 1 hour',   false)
+) AS v(key, text, correct)
+WHERE c.case_id = 'MC_GALLBLADDER_002' AND q.step_number = 2
+  AND NOT EXISTS (SELECT 1 FROM case_options co WHERE co.question_id = q.id AND co.option_key = v.key);
+
+-- Q3
+INSERT INTO case_questions (case_id, step_number, question_text, question_type)
+SELECT c.id, 3, 'What is the initiating mechanism?', 'MECHANISM'
+FROM cases c WHERE c.case_id = 'MC_GALLBLADDER_002'
+  AND NOT EXISTS (SELECT 1 FROM case_questions cq WHERE cq.case_id = c.id AND cq.step_number = 3);
+
+INSERT INTO case_options (question_id, option_key, option_text, is_correct)
+SELECT q.id, v.key, v.text, v.correct
+FROM case_questions q JOIN cases c ON c.id = q.case_id
+CROSS JOIN (VALUES
+  ('A', 'Bile supersaturation causing new stone formation',                 false),
+  ('B', 'Cystic duct obstruction by an impacted gallstone',                true),
+  ('C', 'Common bile duct obstruction with upstream dilation',             false),
+  ('D', 'Bacterial translocation from the portal venous system',           false)
+) AS v(key, text, correct)
+WHERE c.case_id = 'MC_GALLBLADDER_002' AND q.step_number = 3
+  AND NOT EXISTS (SELECT 1 FROM case_options co WHERE co.question_id = q.id AND co.option_key = v.key);
+
+-- Q4
+INSERT INTO case_questions (case_id, step_number, question_text, question_type)
+SELECT c.id, 4, 'What is the definitive management?', 'TREATMENT'
+FROM cases c WHERE c.case_id = 'MC_GALLBLADDER_002'
+  AND NOT EXISTS (SELECT 1 FROM case_questions cq WHERE cq.case_id = c.id AND cq.step_number = 4);
+
+INSERT INTO case_options (question_id, option_key, option_text, is_correct)
+SELECT q.id, v.key, v.text, v.correct
+FROM case_questions q JOIN cases c ON c.id = q.case_id
+CROSS JOIN (VALUES
+  ('A', 'IV antibiotics alone and discharge',          false),
+  ('B', 'Cholecystectomy within 72 hours',             true),
+  ('C', 'ERCP with stent placement',                   false),
+  ('D', 'Oral ursodiol and outpatient follow-up',      false)
+) AS v(key, text, correct)
+WHERE c.case_id = 'MC_GALLBLADDER_002' AND q.step_number = 4
+  AND NOT EXISTS (SELECT 1 FROM case_options co WHERE co.question_id = q.id AND co.option_key = v.key);
