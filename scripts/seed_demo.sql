@@ -420,3 +420,110 @@ CROSS JOIN (VALUES
 ) AS v(key, text, correct)
 WHERE c.case_id = 'MC_GALLBLADDER_002' AND q.step_number = 4
   AND NOT EXISTS (SELECT 1 FROM case_options co WHERE co.question_id = q.id AND co.option_key = v.key);
+
+-- ============================================================
+-- Sprint 3C.3 — Case 03: "Yellow and confused" (HARD, 120 XP)
+-- Linked to DIS_CHOLANGITIS_001 / ANAT_GALLBLADDER_001
+-- Deliberate distractor options
+-- ============================================================
+
+INSERT INTO cases (case_id, title, subtitle, linked_anatomy_id, linked_disease_id, difficulty, estimated_minutes, xp_reward, status)
+SELECT 'MC_GALLBLADDER_003', 'Yellow and confused',
+  'A 68-year-old presents with fever, jaundice, and altered mental status.',
+  ap.id, d.id, 'HARD', 20, 120, 'ACTIVE'
+FROM anatomy_parts ap, diseases d
+WHERE ap.canonical_id = 'ANAT_GALLBLADDER_001' AND d.canonical_id = 'DIS_CHOLANGITIS_001'
+ON CONFLICT (case_id) DO NOTHING;
+
+INSERT INTO case_vignettes (case_id, patient_age, patient_sex, presenting_complaint, history_text, full_vignette_text)
+SELECT c.id, 68, 'Male',
+  'Fever, jaundice, and confusion',
+  'Found confused by family. Known history of CBD stones. Recent ERCP 3 weeks ago. Rigors and yellow discolouration noted by family.',
+  'A 68-year-old man is brought to the emergency department by his family who found him confused and shivering. He has a known history of common bile duct stones and underwent ERCP with incomplete clearance 3 weeks ago. His family reports progressive yellowing of his skin over the past 2 days. On examination he is febrile at 39.2°C, jaundiced, and oriented only to person.'
+FROM cases c WHERE c.case_id = 'MC_GALLBLADDER_003'
+  AND NOT EXISTS (SELECT 1 FROM case_vignettes cv WHERE cv.case_id = c.id);
+
+INSERT INTO case_clues (case_id, clue_type, label, value, is_abnormal, display_order)
+SELECT c.id, v.clue_type, v.label, v.value, v.is_abnormal, v.display_order
+FROM cases c
+CROSS JOIN (VALUES
+  ('vital',   'Temperature',  '39.2°C',           true,  1),
+  ('lab',     'WBC',          '19.6 × 10⁹/L',    true,  2),
+  ('lab',     'Bilirubin',    '85 µmol/L',        true,  3),
+  ('lab',     'ALP',          '420 U/L',          true,  4),
+  ('clinical','Mental status', 'Oriented to person only', true, 5)
+) AS v(clue_type, label, value, is_abnormal, display_order)
+WHERE c.case_id = 'MC_GALLBLADDER_003'
+  AND NOT EXISTS (SELECT 1 FROM case_clues cc WHERE cc.case_id = c.id AND cc.display_order = v.display_order);
+
+-- Q1
+INSERT INTO case_questions (case_id, step_number, question_text, question_type)
+SELECT c.id, 1, 'What clinical triad is demonstrated?', 'DIAGNOSIS'
+FROM cases c WHERE c.case_id = 'MC_GALLBLADDER_003'
+  AND NOT EXISTS (SELECT 1 FROM case_questions cq WHERE cq.case_id = c.id AND cq.step_number = 1);
+
+INSERT INTO case_options (question_id, option_key, option_text, is_correct)
+SELECT q.id, v.key, v.text, v.correct
+FROM case_questions q JOIN cases c ON c.id = q.case_id
+CROSS JOIN (VALUES
+  ('A', 'Beck''s triad (hypotension, JVD, muffled heart sounds)',         false),
+  ('B', 'Charcot''s triad (fever, jaundice, RUQ pain)',                   true),
+  ('C', 'Virchow''s triad (stasis, endothelial injury, hypercoagulability)', false),
+  ('D', 'Cushing''s triad (hypertension, bradycardia, irregular breathing)', false)
+) AS v(key, text, correct)
+WHERE c.case_id = 'MC_GALLBLADDER_003' AND q.step_number = 1
+  AND NOT EXISTS (SELECT 1 FROM case_options co WHERE co.question_id = q.id AND co.option_key = v.key);
+
+-- Q2
+INSERT INTO case_questions (case_id, step_number, question_text, question_type)
+SELECT c.id, 2, 'The addition of confusion and hypotension to the triad defines which syndrome?', 'REASONING'
+FROM cases c WHERE c.case_id = 'MC_GALLBLADDER_003'
+  AND NOT EXISTS (SELECT 1 FROM case_questions cq WHERE cq.case_id = c.id AND cq.step_number = 2);
+
+INSERT INTO case_options (question_id, option_key, option_text, is_correct)
+SELECT q.id, v.key, v.text, v.correct
+FROM case_questions q JOIN cases c ON c.id = q.case_id
+CROSS JOIN (VALUES
+  ('A', 'Mirizzi syndrome',                    false),
+  ('B', 'Reynolds'' pentad (acute cholangitis)', true),
+  ('C', 'Courvoisier''s sign',                 false),
+  ('D', 'Murphy''s sign',                      false)
+) AS v(key, text, correct)
+WHERE c.case_id = 'MC_GALLBLADDER_003' AND q.step_number = 2
+  AND NOT EXISTS (SELECT 1 FROM case_options co WHERE co.question_id = q.id AND co.option_key = v.key);
+
+-- Q3
+INSERT INTO case_questions (case_id, step_number, question_text, question_type)
+SELECT c.id, 3, 'What is the primary pathophysiological mechanism?', 'MECHANISM'
+FROM cases c WHERE c.case_id = 'MC_GALLBLADDER_003'
+  AND NOT EXISTS (SELECT 1 FROM case_questions cq WHERE cq.case_id = c.id AND cq.step_number = 3);
+
+INSERT INTO case_options (question_id, option_key, option_text, is_correct)
+SELECT q.id, v.key, v.text, v.correct
+FROM case_questions q JOIN cases c ON c.id = q.case_id
+CROSS JOIN (VALUES
+  ('A', 'Gallbladder mucosal inflammation from trapped bile acids',   false),
+  ('B', 'Bile duct obstruction with bacterial ascent from duodenum',  true),
+  ('C', 'Portal vein thrombosis causing hepatic congestion',          false),
+  ('D', 'Pancreatic duct obstruction with autodigestion',             false)
+) AS v(key, text, correct)
+WHERE c.case_id = 'MC_GALLBLADDER_003' AND q.step_number = 3
+  AND NOT EXISTS (SELECT 1 FROM case_options co WHERE co.question_id = q.id AND co.option_key = v.key);
+
+-- Q4
+INSERT INTO case_questions (case_id, step_number, question_text, question_type)
+SELECT c.id, 4, 'What is the most urgent intervention?', 'TREATMENT'
+FROM cases c WHERE c.case_id = 'MC_GALLBLADDER_003'
+  AND NOT EXISTS (SELECT 1 FROM case_questions cq WHERE cq.case_id = c.id AND cq.step_number = 4);
+
+INSERT INTO case_options (question_id, option_key, option_text, is_correct)
+SELECT q.id, v.key, v.text, v.correct
+FROM case_questions q JOIN cases c ON c.id = q.case_id
+CROSS JOIN (VALUES
+  ('A', 'Elective cholecystectomy in 6 weeks',                false),
+  ('B', 'Oral antibiotics and outpatient review',             false),
+  ('C', 'Emergency ERCP with biliary decompression',          true),
+  ('D', 'Percutaneous cholecystostomy drain',                 false)
+) AS v(key, text, correct)
+WHERE c.case_id = 'MC_GALLBLADDER_003' AND q.step_number = 4
+  AND NOT EXISTS (SELECT 1 FROM case_options co WHERE co.question_id = q.id AND co.option_key = v.key);
