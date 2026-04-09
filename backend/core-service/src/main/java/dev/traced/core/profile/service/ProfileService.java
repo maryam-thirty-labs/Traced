@@ -2,6 +2,7 @@ package dev.traced.core.profile.service;
 
 import dev.traced.core.cases.repository.CaseAttemptRepository;
 import dev.traced.core.common.EntityNotFoundException;
+import dev.traced.core.profile.dto.PreferencesRequest;
 import dev.traced.core.profile.dto.ProgressDto;
 import dev.traced.core.profile.dto.UserProfileDto;
 import dev.traced.core.profile.entity.UserProfile;
@@ -89,5 +90,19 @@ public class ProfileService {
             .recentAttempts(recentAttempts)
             .suggestedNext(suggestedNext)
             .build();
+    }
+
+    @Transactional
+    public void updatePreferences(UUID userId, PreferencesRequest request) {
+        UserProfile profile = userProfileRepository.findByUserId(userId)
+            .orElseThrow(() -> new EntityNotFoundException("UserProfile", userId.toString()));
+
+        if (request.etymologyEnabled() != null) {
+            profile.setEtymologyEnabled(request.etymologyEnabled());
+        }
+        if (request.preferredSystem() != null) {
+            profile.setPreferredSystem(request.preferredSystem());
+        }
+        userProfileRepository.save(profile);
     }
 }

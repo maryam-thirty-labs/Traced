@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { getProfile } from "@/features/progression/lib/progressApi";
+import { getProfile, updatePreferences } from "@/features/progression/lib/progressApi";
 import { SkeletonLoader } from "@/shared/ui/SkeletonLoader";
 import { ErrorState } from "@/shared/ui/ErrorState";
 import type { UserProfileDto } from "@/features/progression/types/progress.types";
@@ -99,15 +99,46 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* Etymology toggle display */}
-      <div className="flex items-center justify-between rounded-lg border border-border-subtle bg-surface-card p-4">
-        <div>
-          <p className="text-sm text-text-primary">Etymology breakdowns</p>
-          <p className="text-xs text-text-muted">Show word-root meanings on disease cards</p>
+      {/* Preferences */}
+      <div className="space-y-3">
+        <h3 className="text-sm font-semibold text-text-primary">Preferences</h3>
+
+        <div className="flex items-center justify-between rounded-lg border border-border-subtle bg-surface-card p-4">
+          <div>
+            <p className="text-sm text-text-primary">Etymology breakdowns</p>
+            <p className="text-xs text-text-muted">Show word-root meanings on disease cards</p>
+          </div>
+          <button
+            onClick={async () => {
+              const newVal = !profile.etymologyEnabled;
+              await updatePreferences({ etymologyEnabled: newVal });
+              setProfile({ ...profile, etymologyEnabled: newVal });
+            }}
+            className={`text-xs font-medium px-3 py-1 rounded transition-colors ${profile.etymologyEnabled ? "bg-green-400/10 text-green-400" : "bg-surface-elevated text-text-muted"}`}
+          >
+            {profile.etymologyEnabled ? "On" : "Off"}
+          </button>
         </div>
-        <span className={`text-xs font-medium px-2 py-0.5 rounded ${profile.etymologyEnabled ? "bg-green-400/10 text-green-400" : "bg-surface-elevated text-text-muted"}`}>
-          {profile.etymologyEnabled ? "On" : "Off"}
-        </span>
+
+        <div className="flex items-center justify-between rounded-lg border border-border-subtle bg-surface-card p-4">
+          <div>
+            <p className="text-sm text-text-primary">Preferred system</p>
+            <p className="text-xs text-text-muted">Default system on explorer load</p>
+          </div>
+          <select
+            value={profile.unlockedSystems.includes(profile.displayName) ? "" : ""}
+            onChange={async (e) => {
+              await updatePreferences({ preferredSystem: e.target.value });
+            }}
+            className="text-xs px-2 py-1 rounded bg-surface-elevated text-text-secondary border border-border-default focus:outline-none focus:border-accent"
+          >
+            {profile.unlockedSystems.map((sys) => (
+              <option key={sys} value={sys}>
+                {SYSTEM_LABELS[sys] ?? sys}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
     </div>
   );
