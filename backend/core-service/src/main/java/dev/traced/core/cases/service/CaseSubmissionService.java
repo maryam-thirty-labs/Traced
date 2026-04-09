@@ -11,6 +11,7 @@ import dev.traced.core.common.EntityNotFoundException;
 import dev.traced.core.profile.entity.UserProfile;
 import dev.traced.core.profile.repository.UserProfileRepository;
 import dev.traced.core.progression.service.LevelService;
+import dev.traced.core.progression.service.MasteryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,6 +31,7 @@ public class CaseSubmissionService {
     private final CaseAttemptRepository caseAttemptRepository;
     private final UserProfileRepository userProfileRepository;
     private final LevelService levelService;
+    private final MasteryService masteryService;
 
     @Transactional
     public SubmissionResult submit(String caseId, UUID userProfileId, List<AnswerDto> answers) {
@@ -83,6 +85,10 @@ public class CaseSubmissionService {
             .score(score)
             .build();
         caseAttemptRepository.save(attempt);
+
+        // Update mastery — same transaction
+        String systemCanonicalId = c.getLinkedAnatomy().getSystem().getCanonicalId();
+        masteryService.update(userProfileId, systemCanonicalId, outcome.equals("CORRECT"), profile);
 
         int currentLevel = levelService.calculateLevel(profile.getTotalXp());
 
