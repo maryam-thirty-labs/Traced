@@ -3,6 +3,7 @@ package dev.traced.core.anatomy.controller;
 import dev.traced.core.anatomy.dto.AnatomyPartSummaryDto;
 import dev.traced.core.anatomy.service.AnatomyService;
 import dev.traced.core.cases.dto.CaseSummaryDto;
+import dev.traced.core.cases.service.CaseService;
 import dev.traced.core.disease.dto.DiseaseSummaryDto;
 import dev.traced.core.mechanism.dto.MechanismDto;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +18,7 @@ import java.util.List;
 public class AnatomyController {
 
     private final AnatomyService anatomyService;
+    private final CaseService caseService;
 
     @GetMapping("/{canonicalId}")
     public ResponseEntity<AnatomyPartSummaryDto> getAnatomyPart(
@@ -46,9 +48,7 @@ public class AnatomyController {
     public ResponseEntity<List<CaseSummaryDto>> getAnatomyCases(
         @PathVariable String canonicalId
     ) {
-        // Validates the part exists (throws 404 if not)
-        anatomyService.findByCanonicalId(canonicalId);
-        // Cases are empty until Phase 3C
-        return ResponseEntity.ok(List.of());
+        var part = anatomyService.findByCanonicalId(canonicalId);
+        return ResponseEntity.ok(caseService.findByAnatomyPartId(part.getId()));
     }
 }
