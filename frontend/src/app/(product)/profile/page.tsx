@@ -6,6 +6,13 @@ import { SkeletonLoader } from "@/shared/ui/SkeletonLoader";
 import { ErrorState } from "@/shared/ui/ErrorState";
 import type { UserProfileDto } from "@/features/progression/types/progress.types";
 
+const BADGES = [
+  { id: "first-case", name: "First Steps", description: "Complete your first case", icon: "\u{1F9EA}", requiredLevel: 1 },
+  { id: "level-3", name: "Rising Student", description: "Reach Level 3", icon: "\u{1F4DA}", requiredLevel: 3 },
+  { id: "level-5", name: "Scholar", description: "Reach Level 5", icon: "\u{1F393}", requiredLevel: 5 },
+  { id: "level-8", name: "Authority", description: "Reach Level 8", icon: "\u{2B50}", requiredLevel: 8 },
+] as const;
+
 const SYSTEM_LABELS: Record<string, string> = {
   SYS_DIGESTIVE_001: "Digestive",
   SYS_SKELETAL_001: "Skeletal",
@@ -138,6 +145,34 @@ export default function ProfilePage() {
               </option>
             ))}
           </select>
+        </div>
+      </div>
+
+      {/* Badges */}
+      <div className="space-y-3">
+        <h3 className="text-sm font-semibold text-text-primary">Badges</h3>
+        <div className="grid grid-cols-2 gap-3">
+          {BADGES.map((badge) => {
+            const earned = profile.currentLevel >= badge.requiredLevel;
+            return (
+              <div
+                key={badge.id}
+                className={`flex items-center gap-3 rounded-lg border p-3 ${
+                  earned
+                    ? "border-accent-border bg-accent-muted"
+                    : "border-border-subtle bg-surface-card opacity-40"
+                }`}
+              >
+                <span className="text-2xl">{badge.icon}</span>
+                <div>
+                  <p className={`text-sm font-medium ${earned ? "text-accent-text" : "text-text-muted"}`}>
+                    {badge.name}
+                  </p>
+                  <p className="text-[10px] text-text-muted">{badge.description}</p>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>
