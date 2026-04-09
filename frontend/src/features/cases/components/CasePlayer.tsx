@@ -51,7 +51,7 @@ export function CasePlayer({ caseData, onSubmit }: CasePlayerProps) {
       )}
 
       {/* Clue grid */}
-      {caseData.clues.length > 0 && (
+      {caseData.clues && caseData.clues.length > 0 && (
         <div className="grid grid-cols-2 gap-2">
           {caseData.clues.map((clue) => (
             <div
