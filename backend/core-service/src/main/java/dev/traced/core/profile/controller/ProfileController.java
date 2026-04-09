@@ -40,4 +40,18 @@ public class ProfileController {
         profileService.updatePreferences(userId, request);
         return ResponseEntity.ok(Map.of("status", "updated"));
     }
+
+    @DeleteMapping("/me/progress")
+    public ResponseEntity<Map<String, String>> resetProgress(
+        Authentication auth,
+        @RequestBody Map<String, String> body
+    ) {
+        String phrase = body.get("confirmationPhrase");
+        if (!"RESET_MY_PROGRESS".equals(phrase)) {
+            throw new IllegalArgumentException("Invalid confirmation phrase");
+        }
+        UUID userId = (UUID) auth.getPrincipal();
+        profileService.resetProgress(userId);
+        return ResponseEntity.ok(Map.of("status", "reset"));
+    }
 }

@@ -105,4 +105,21 @@ public class ProfileService {
         }
         userProfileRepository.save(profile);
     }
+
+    @Transactional
+    public void resetProgress(UUID userId) {
+        UserProfile profile = userProfileRepository.findByUserId(userId)
+            .orElseThrow(() -> new EntityNotFoundException("UserProfile", userId.toString()));
+
+        // Delete CaseAttempts and MasteryRecords
+        caseAttemptRepository.findByUserProfileId(profile.getId())
+            .forEach(a -> caseAttemptRepository.delete(a));
+        masteryRecordRepository.findByUserProfileId(profile.getId())
+            .forEach(m -> masteryRecordRepository.delete(m));
+
+        // Reset XP and streak — preserve UserProfile row
+        profile.setTotalXp(0);
+        profile.setCurrentStreak(0);
+        userProfileRepository.save(profile);
+    }
 }
