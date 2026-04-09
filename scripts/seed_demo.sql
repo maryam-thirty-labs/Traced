@@ -148,3 +148,56 @@ INSERT INTO treatments (canonical_id, name, treatment_class, status) VALUES
   ('TRT_ANTIBIOTICS_BILIARY_001','Antibiotics (biliary)',        'Pharmacological', 'ACTIVE'),
   ('TRT_ANALGESICS_001',         'Analgesics',                   'Pharmacological', 'ACTIVE')
 ON CONFLICT (canonical_id) DO NOTHING;
+
+-- ============================================================
+-- Sprint 2C.6 — Relation seed
+-- anatomy↔disease, disease↔mechanism, disease↔treatment
+-- Idempotent: ON CONFLICT DO NOTHING
+-- ============================================================
+
+-- Anatomy ↔ Disease relations (gallbladder → 3 diseases)
+INSERT INTO anatomy_disease_relations (anatomy_part_id, disease_id, relation_strength)
+SELECT ap.id, d.id, v.strength
+FROM (VALUES
+  ('ANAT_GALLBLADDER_001', 'DIS_CHOLELITHIASIS_001', 'PRIMARY'),
+  ('ANAT_GALLBLADDER_001', 'DIS_CHOLECYSTITIS_001',  'PRIMARY'),
+  ('ANAT_GALLBLADDER_001', 'DIS_CHOLANGITIS_001',    'SECONDARY'),
+  ('ANAT_LIVER_001',       'DIS_CHOLANGITIS_001',    'SECONDARY')
+) AS v(anat_cid, dis_cid, strength)
+JOIN anatomy_parts ap ON ap.canonical_id = v.anat_cid
+JOIN diseases d ON d.canonical_id = v.dis_cid
+ON CONFLICT (anatomy_part_id, disease_id) DO NOTHING;
+
+-- Disease ↔ Mechanism relations
+INSERT INTO disease_mechanism_relations (disease_id, mechanism_id)
+SELECT d.id, m.id
+FROM (VALUES
+  ('DIS_CHOLELITHIASIS_001', 'MECH_BILE_SUPERSATURATION_001'),
+  ('DIS_CHOLELITHIASIS_001', 'MECH_GALLBLADDER_HYPOMOTILITY_001'),
+  ('DIS_CHOLECYSTITIS_001',  'MECH_CYSTIC_DUCT_OBSTRUCTION_001'),
+  ('DIS_CHOLECYSTITIS_001',  'MECH_MUCOSAL_INFLAMMATION_001'),
+  ('DIS_CHOLECYSTITIS_001',  'MECH_PROSTAGLANDIN_RELEASE_001'),
+  ('DIS_CHOLANGITIS_001',    'MECH_BILE_DUCT_OBSTRUCTION_001'),
+  ('DIS_CHOLANGITIS_001',    'MECH_BACTERIAL_ASCENT_001')
+) AS v(dis_cid, mech_cid)
+JOIN diseases d ON d.canonical_id = v.dis_cid
+JOIN mechanisms m ON m.canonical_id = v.mech_cid
+ON CONFLICT (disease_id, mechanism_id) DO NOTHING;
+
+-- Disease ↔ Treatment relations (with treatment roles)
+INSERT INTO disease_treatment_relations (disease_id, treatment_id, treatment_role, line_of_therapy)
+SELECT d.id, t.id, v.role, v.line
+FROM (VALUES
+  ('DIS_CHOLELITHIASIS_001', 'TRT_CHOLECYSTECTOMY_001',    'CAUSE_TARGETING',   1),
+  ('DIS_CHOLELITHIASIS_001', 'TRT_URSODIOL_001',           'DISEASE_MODIFYING', 2),
+  ('DIS_CHOLELITHIASIS_001', 'TRT_ANALGESICS_001',         'SYMPTOMATIC',       NULL),
+  ('DIS_CHOLECYSTITIS_001',  'TRT_CHOLECYSTECTOMY_001',    'CAUSE_TARGETING',   1),
+  ('DIS_CHOLECYSTITIS_001',  'TRT_ANTIBIOTICS_BILIARY_001','SUPPORTIVE',        1),
+  ('DIS_CHOLECYSTITIS_001',  'TRT_ANALGESICS_001',         'SYMPTOMATIC',       NULL),
+  ('DIS_CHOLANGITIS_001',    'TRT_ERCP_001',               'CAUSE_TARGETING',   1),
+  ('DIS_CHOLANGITIS_001',    'TRT_ANTIBIOTICS_BILIARY_001','CAUSE_TARGETING',   1),
+  ('DIS_CHOLANGITIS_001',    'TRT_ANALGESICS_001',         'SYMPTOMATIC',       NULL)
+) AS v(dis_cid, trt_cid, role, line)
+JOIN diseases d ON d.canonical_id = v.dis_cid
+JOIN treatments t ON t.canonical_id = v.trt_cid
+ON CONFLICT (disease_id, treatment_id, treatment_role) DO NOTHING;
