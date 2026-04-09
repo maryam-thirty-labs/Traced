@@ -722,3 +722,73 @@ FROM (VALUES
 JOIN diseases d ON d.canonical_id = v.dis_cid
 JOIN mechanisms m ON m.canonical_id = v.mech_cid
 ON CONFLICT (disease_id, mechanism_id) DO NOTHING;
+
+-- ============================================================
+-- Sprint 7.3 — Skeletal case pack (4 cases)
+-- ============================================================
+
+INSERT INTO cases (case_id, title, subtitle, linked_anatomy_id, linked_disease_id, difficulty, estimated_minutes, xp_reward, status)
+SELECT v.cid, v.title, v.subtitle, ap.id, d.id, v.diff, v.mins, v.xp, 'ACTIVE'
+FROM (VALUES
+  ('MC_SKELETAL_001', 'The footballer''s knee',    'A 22-year-old athlete presents with anterior knee pain worsening on stairs.', 'ANAT_PATELLA_001', 'DIS_PATELLOFEMORAL_SYNDROME_001', 'EASY',   10, 80),
+  ('MC_SKELETAL_002', 'The old lady''s fall',      'An 82-year-old woman is brought in after a fall onto her hip.',               'ANAT_FEMUR_001',   'DIS_FEMORAL_FRACTURE_001',        'MEDIUM', 15, 100),
+  ('MC_SKELETAL_003', 'The wrist that twisted',    'A 65-year-old trips on ice and lands on an outstretched hand.',               'ANAT_RADIUS_001',  'DIS_COLLES_FRACTURE_001',         'MEDIUM', 15, 100),
+  ('MC_SKELETAL_004', 'Morning stiffness',         'A 58-year-old reports progressive low back pain and stiffness over 6 months.','ANAT_LUMBAR_SPINE_001','DIS_DISC_HERNIATION_001',      'HARD',   20, 120)
+) AS v(cid, title, subtitle, anat_cid, dis_cid, diff, mins, xp)
+JOIN anatomy_parts ap ON ap.canonical_id = v.anat_cid
+JOIN diseases d ON d.canonical_id = v.dis_cid
+ON CONFLICT (case_id) DO NOTHING;
+
+INSERT INTO case_vignettes (case_id, patient_age, patient_sex, presenting_complaint, history_text, full_vignette_text)
+SELECT c.id, v.age, v.sex, v.complaint, v.history, v.full
+FROM cases c JOIN (VALUES
+  ('MC_SKELETAL_001', 22, 'Male', 'Anterior knee pain worsening on stairs',
+   'Pain started 3 months ago after increasing training. No trauma. Worse going downstairs and after prolonged sitting.',
+   'A 22-year-old university footballer presents with a 3-month history of anterior knee pain. The pain worsens going downstairs and after prolonged sitting in lectures. He denies any acute injury. On examination, there is tenderness on patellar compression and a positive Clarke''s test.'),
+  ('MC_SKELETAL_002', 82, 'Female', 'Unable to weight-bear after a fall',
+   'Found on the floor at home. Known osteoporosis. On warfarin for atrial fibrillation.',
+   'An 82-year-old woman is brought to the emergency department after being found on the floor by her carer. She is unable to weight-bear on her left leg. She has a known history of osteoporosis and is on warfarin for atrial fibrillation. The left leg appears shortened and externally rotated.'),
+  ('MC_SKELETAL_003', 65, 'Female', 'Wrist pain and swelling after a fall',
+   'Slipped on ice. Landed on outstretched right hand. Immediate pain and swelling at the wrist.',
+   'A 65-year-old woman presents after slipping on ice and landing on her outstretched right hand. She has immediate pain, swelling, and a visible deformity at the wrist with a dinner fork appearance. She has a history of osteoporosis diagnosed 3 years ago but stopped taking alendronate.'),
+  ('MC_SKELETAL_004', 58, 'Male', 'Progressive low back pain with leg radiation',
+   'Pain over 6 months, now radiating to left leg. Numbness in left foot. Worse sitting and bending forward.',
+   'A 58-year-old office worker presents with a 6-month history of progressive low back pain that now radiates down his left leg to the foot. He describes numbness in his left big toe. The pain is worse when sitting and bending forward. He has no bladder or bowel symptoms. Straight leg raise is positive at 40 degrees on the left.')
+) AS v(cid, age, sex, complaint, history, full) ON c.case_id = v.cid
+WHERE NOT EXISTS (SELECT 1 FROM case_vignettes cv WHERE cv.case_id = c.id);
+
+-- MC_SKELETAL_001 questions + options
+INSERT INTO case_questions (case_id, step_number, question_text, question_type)
+SELECT c.id, v.step, v.text, v.qtype FROM cases c CROSS JOIN (VALUES (1,'What is the most likely diagnosis?','DIAGNOSIS'),(2,'Which examination finding is most supportive?','REASONING'),(3,'What is the underlying mechanism?','MECHANISM'),(4,'What is the first-line management?','TREATMENT')) AS v(step,text,qtype) WHERE c.case_id='MC_SKELETAL_001' AND NOT EXISTS (SELECT 1 FROM case_questions cq WHERE cq.case_id=c.id AND cq.step_number=v.step);
+
+INSERT INTO case_options (question_id,option_key,option_text,is_correct) SELECT q.id,v.key,v.text,v.correct FROM case_questions q JOIN cases c ON c.id=q.case_id CROSS JOIN (VALUES ('A','Meniscal tear',false),('B','Patellofemoral pain syndrome',true),('C','ACL rupture',false),('D','Osgood-Schlatter disease',false)) AS v(key,text,correct) WHERE c.case_id='MC_SKELETAL_001' AND q.step_number=1 AND NOT EXISTS (SELECT 1 FROM case_options co WHERE co.question_id=q.id AND co.option_key=v.key);
+INSERT INTO case_options (question_id,option_key,option_text,is_correct) SELECT q.id,v.key,v.text,v.correct FROM case_questions q JOIN cases c ON c.id=q.case_id CROSS JOIN (VALUES ('A','Positive anterior drawer test',false),('B','Positive Clarke''s test with patellar tenderness',true),('C','Joint line tenderness with McMurray positive',false),('D','Valgus stress instability',false)) AS v(key,text,correct) WHERE c.case_id='MC_SKELETAL_001' AND q.step_number=2 AND NOT EXISTS (SELECT 1 FROM case_options co WHERE co.question_id=q.id AND co.option_key=v.key);
+INSERT INTO case_options (question_id,option_key,option_text,is_correct) SELECT q.id,v.key,v.text,v.correct FROM case_questions q JOIN cases c ON c.id=q.case_id CROSS JOIN (VALUES ('A','Acute ligament rupture',false),('B','Cartilage degeneration and patellar maltracking',true),('C','Osteochondral defect',false),('D','Meniscal degeneration',false)) AS v(key,text,correct) WHERE c.case_id='MC_SKELETAL_001' AND q.step_number=3 AND NOT EXISTS (SELECT 1 FROM case_options co WHERE co.question_id=q.id AND co.option_key=v.key);
+INSERT INTO case_options (question_id,option_key,option_text,is_correct) SELECT q.id,v.key,v.text,v.correct FROM case_questions q JOIN cases c ON c.id=q.case_id CROSS JOIN (VALUES ('A','Arthroscopic surgery',false),('B','Physiotherapy with quadriceps strengthening',true),('C','Corticosteroid injection',false),('D','Total knee replacement',false)) AS v(key,text,correct) WHERE c.case_id='MC_SKELETAL_001' AND q.step_number=4 AND NOT EXISTS (SELECT 1 FROM case_options co WHERE co.question_id=q.id AND co.option_key=v.key);
+
+-- MC_SKELETAL_002 questions + options
+INSERT INTO case_questions (case_id, step_number, question_text, question_type)
+SELECT c.id, v.step, v.text, v.qtype FROM cases c CROSS JOIN (VALUES (1,'What is the most likely diagnosis?','DIAGNOSIS'),(2,'Which clinical sign is most characteristic?','REASONING'),(3,'What predisposing condition is most relevant?','MECHANISM'),(4,'What is the definitive treatment?','TREATMENT')) AS v(step,text,qtype) WHERE c.case_id='MC_SKELETAL_002' AND NOT EXISTS (SELECT 1 FROM case_questions cq WHERE cq.case_id=c.id AND cq.step_number=v.step);
+
+INSERT INTO case_options (question_id,option_key,option_text,is_correct) SELECT q.id,v.key,v.text,v.correct FROM case_questions q JOIN cases c ON c.id=q.case_id CROSS JOIN (VALUES ('A','Hip dislocation',false),('B','Neck of femur fracture',true),('C','Pelvic fracture',false),('D','Greater trochanter bursitis',false)) AS v(key,text,correct) WHERE c.case_id='MC_SKELETAL_002' AND q.step_number=1 AND NOT EXISTS (SELECT 1 FROM case_options co WHERE co.question_id=q.id AND co.option_key=v.key);
+INSERT INTO case_options (question_id,option_key,option_text,is_correct) SELECT q.id,v.key,v.text,v.correct FROM case_questions q JOIN cases c ON c.id=q.case_id CROSS JOIN (VALUES ('A','Swollen knee joint',false),('B','Shortened and externally rotated leg',true),('C','Bruising over greater trochanter',false),('D','Inability to straight leg raise',false)) AS v(key,text,correct) WHERE c.case_id='MC_SKELETAL_002' AND q.step_number=2 AND NOT EXISTS (SELECT 1 FROM case_options co WHERE co.question_id=q.id AND co.option_key=v.key);
+INSERT INTO case_options (question_id,option_key,option_text,is_correct) SELECT q.id,v.key,v.text,v.correct FROM case_questions q JOIN cases c ON c.id=q.case_id CROSS JOIN (VALUES ('A','Rheumatoid arthritis',false),('B','Osteoporosis with reduced bone density',true),('C','Vitamin D deficiency',false),('D','Paget''s disease',false)) AS v(key,text,correct) WHERE c.case_id='MC_SKELETAL_002' AND q.step_number=3 AND NOT EXISTS (SELECT 1 FROM case_options co WHERE co.question_id=q.id AND co.option_key=v.key);
+INSERT INTO case_options (question_id,option_key,option_text,is_correct) SELECT q.id,v.key,v.text,v.correct FROM case_questions q JOIN cases c ON c.id=q.case_id CROSS JOIN (VALUES ('A','Bed rest and analgesia',false),('B','Surgical fixation or hip replacement',true),('C','Skeletal traction for 6 weeks',false),('D','Hip brace and physiotherapy',false)) AS v(key,text,correct) WHERE c.case_id='MC_SKELETAL_002' AND q.step_number=4 AND NOT EXISTS (SELECT 1 FROM case_options co WHERE co.question_id=q.id AND co.option_key=v.key);
+
+-- MC_SKELETAL_003 questions + options
+INSERT INTO case_questions (case_id, step_number, question_text, question_type)
+SELECT c.id, v.step, v.text, v.qtype FROM cases c CROSS JOIN (VALUES (1,'What is the most likely diagnosis?','DIAGNOSIS'),(2,'What is the classic deformity?','REASONING'),(3,'What increases fracture risk?','MECHANISM'),(4,'What is the initial management?','TREATMENT')) AS v(step,text,qtype) WHERE c.case_id='MC_SKELETAL_003' AND NOT EXISTS (SELECT 1 FROM case_questions cq WHERE cq.case_id=c.id AND cq.step_number=v.step);
+
+INSERT INTO case_options (question_id,option_key,option_text,is_correct) SELECT q.id,v.key,v.text,v.correct FROM case_questions q JOIN cases c ON c.id=q.case_id CROSS JOIN (VALUES ('A','Scaphoid fracture',false),('B','Colles fracture',true),('C','Smith''s fracture',false),('D','Barton''s fracture',false)) AS v(key,text,correct) WHERE c.case_id='MC_SKELETAL_003' AND q.step_number=1 AND NOT EXISTS (SELECT 1 FROM case_options co WHERE co.question_id=q.id AND co.option_key=v.key);
+INSERT INTO case_options (question_id,option_key,option_text,is_correct) SELECT q.id,v.key,v.text,v.correct FROM case_questions q JOIN cases c ON c.id=q.case_id CROSS JOIN (VALUES ('A','Boutonniere deformity',false),('B','Dinner fork deformity',true),('C','Swan neck deformity',false),('D','Mallet finger',false)) AS v(key,text,correct) WHERE c.case_id='MC_SKELETAL_003' AND q.step_number=2 AND NOT EXISTS (SELECT 1 FROM case_options co WHERE co.question_id=q.id AND co.option_key=v.key);
+INSERT INTO case_options (question_id,option_key,option_text,is_correct) SELECT q.id,v.key,v.text,v.correct FROM case_questions q JOIN cases c ON c.id=q.case_id CROSS JOIN (VALUES ('A','Rheumatoid arthritis',false),('B','Osteoporosis',true),('C','Gout',false),('D','Carpal tunnel syndrome',false)) AS v(key,text,correct) WHERE c.case_id='MC_SKELETAL_003' AND q.step_number=3 AND NOT EXISTS (SELECT 1 FROM case_options co WHERE co.question_id=q.id AND co.option_key=v.key);
+INSERT INTO case_options (question_id,option_key,option_text,is_correct) SELECT q.id,v.key,v.text,v.correct FROM case_questions q JOIN cases c ON c.id=q.case_id CROSS JOIN (VALUES ('A','Immediate open reduction',false),('B','Closed reduction and cast',true),('C','Wrist arthrodesis',false),('D','Splint only',false)) AS v(key,text,correct) WHERE c.case_id='MC_SKELETAL_003' AND q.step_number=4 AND NOT EXISTS (SELECT 1 FROM case_options co WHERE co.question_id=q.id AND co.option_key=v.key);
+
+-- MC_SKELETAL_004 questions + options
+INSERT INTO case_questions (case_id, step_number, question_text, question_type)
+SELECT c.id, v.step, v.text, v.qtype FROM cases c CROSS JOIN (VALUES (1,'What is the most likely diagnosis?','DIAGNOSIS'),(2,'Which finding localises the nerve root?','REASONING'),(3,'What is the primary pathological process?','MECHANISM'),(4,'What is the first-line management?','TREATMENT')) AS v(step,text,qtype) WHERE c.case_id='MC_SKELETAL_004' AND NOT EXISTS (SELECT 1 FROM case_questions cq WHERE cq.case_id=c.id AND cq.step_number=v.step);
+
+INSERT INTO case_options (question_id,option_key,option_text,is_correct) SELECT q.id,v.key,v.text,v.correct FROM case_questions q JOIN cases c ON c.id=q.case_id CROSS JOIN (VALUES ('A','Lumbar spinal stenosis',false),('B','L5/S1 disc herniation',true),('C','Ankylosing spondylitis',false),('D','Cauda equina syndrome',false)) AS v(key,text,correct) WHERE c.case_id='MC_SKELETAL_004' AND q.step_number=1 AND NOT EXISTS (SELECT 1 FROM case_options co WHERE co.question_id=q.id AND co.option_key=v.key);
+INSERT INTO case_options (question_id,option_key,option_text,is_correct) SELECT q.id,v.key,v.text,v.correct FROM case_questions q JOIN cases c ON c.id=q.case_id CROSS JOIN (VALUES ('A','Pain on lumbar extension',false),('B','Numbness in big toe (L5 dermatome)',true),('C','Saddle anaesthesia',false),('D','Bilateral leg weakness',false)) AS v(key,text,correct) WHERE c.case_id='MC_SKELETAL_004' AND q.step_number=2 AND NOT EXISTS (SELECT 1 FROM case_options co WHERE co.question_id=q.id AND co.option_key=v.key);
+INSERT INTO case_options (question_id,option_key,option_text,is_correct) SELECT q.id,v.key,v.text,v.correct FROM case_questions q JOIN cases c ON c.id=q.case_id CROSS JOIN (VALUES ('A','Facet joint arthropathy',false),('B','Disc degeneration with nucleus pulposus herniation',true),('C','Ligamentum flavum hypertrophy',false),('D','Vertebral body fracture',false)) AS v(key,text,correct) WHERE c.case_id='MC_SKELETAL_004' AND q.step_number=3 AND NOT EXISTS (SELECT 1 FROM case_options co WHERE co.question_id=q.id AND co.option_key=v.key);
+INSERT INTO case_options (question_id,option_key,option_text,is_correct) SELECT q.id,v.key,v.text,v.correct FROM case_questions q JOIN cases c ON c.id=q.case_id CROSS JOIN (VALUES ('A','Immediate spinal surgery',false),('B','Conservative management with physiotherapy',true),('C','Epidural steroid injection',false),('D','Bed rest for 6 weeks',false)) AS v(key,text,correct) WHERE c.case_id='MC_SKELETAL_004' AND q.step_number=4 AND NOT EXISTS (SELECT 1 FROM case_options co WHERE co.question_id=q.id AND co.option_key=v.key);
