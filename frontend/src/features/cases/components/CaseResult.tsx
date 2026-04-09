@@ -1,18 +1,70 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import type { SubmissionResult } from "../lib/caseApi";
 
 type CaseResultProps = {
   result: SubmissionResult;
   caseTitle: string;
+  previousLevel?: number;
 };
 
-export function CaseResult({ result, caseTitle }: CaseResultProps) {
+function useCountUp(target: number, durationMs = 800): number {
+  const [value, setValue] = useState(0);
+
+  useEffect(() => {
+    if (target === 0) {
+      setValue(0);
+      return;
+    }
+
+    const startTime = performance.now();
+    let raf: number;
+
+    function tick(now: number) {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / durationMs, 1);
+      // Ease-out quad
+      const eased = 1 - (1 - progress) * (1 - progress);
+      setValue(Math.round(eased * target));
+
+      if (progress < 1) {
+        raf = requestAnimationFrame(tick);
+      }
+    }
+
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [target, durationMs]);
+
+  return value;
+}
+
+export function CaseResult({ result, caseTitle, previousLevel }: CaseResultProps) {
   const isCorrect = result.outcome === "CORRECT";
+  const animatedXp = useCountUp(result.xpAwarded);
+  const showLevelUp = previousLevel !== undefined && result.currentLevel > previousLevel;
+  const [levelUpVisible, setLevelUpVisible] = useState(false);
+
+  useEffect(() => {
+    if (showLevelUp) {
+      const timer = setTimeout(() => setLevelUpVisible(true), 900);
+      return () => clearTimeout(timer);
+    }
+  }, [showLevelUp]);
 
   return (
     <div className="flex flex-col items-center gap-6 max-w-md mx-auto px-6 py-12 text-center">
+      {/* Level up banner */}
+      {levelUpVisible && (
+        <div className="w-full rounded-lg p-4 bg-accent-muted border border-accent-border animate-pulse">
+          <p className="text-sm font-bold text-accent-text">
+            Level Up! You are now Level {result.currentLevel}
+          </p>
+        </div>
+      )}
+
       {/* Outcome banner */}
       <div
         className={`w-full rounded-lg p-6 ${
@@ -35,7 +87,7 @@ export function CaseResult({ result, caseTitle }: CaseResultProps) {
         </div>
         <div className="flex flex-col items-center gap-1 rounded-lg border border-border-subtle bg-surface-card p-3">
           <span className="text-xs text-text-muted">XP Earned</span>
-          <span className="text-lg font-bold text-accent-text">+{result.xpAwarded}</span>
+          <span className="text-lg font-bold text-accent-text">+{animatedXp}</span>
         </div>
         <div className="flex flex-col items-center gap-1 rounded-lg border border-border-subtle bg-surface-card p-3">
           <span className="text-xs text-text-muted">Level</span>
