@@ -135,3 +135,16 @@ INSERT INTO mechanisms (canonical_id, name, description, status) VALUES
   ('MECH_MUCOSAL_INFLAMMATION_001',   'Mucosal inflammation',      'Trapped bile acids damage the gallbladder mucosa, triggering an inflammatory cascade.', 'ACTIVE'),
   ('MECH_PROSTAGLANDIN_RELEASE_001',  'Prostaglandin release',     'Mucosal injury triggers prostaglandin synthesis, increasing fluid secretion and wall distension.', 'ACTIVE')
 ON CONFLICT (canonical_id) DO NOTHING;
+
+-- ============================================================
+-- Sprint 2C.5 — Treatment seed (5 treatments)
+-- Idempotent: ON CONFLICT DO NOTHING
+-- ============================================================
+
+INSERT INTO treatments (canonical_id, name, treatment_class, status) VALUES
+  ('TRT_CHOLECYSTECTOMY_001',    'Cholecystectomy',              'Surgical',       'ACTIVE'),
+  ('TRT_URSODIOL_001',           'Ursodiol',                     'Pharmacological', 'ACTIVE'),
+  ('TRT_ERCP_001',               'ERCP',                         'Procedural',     'ACTIVE'),
+  ('TRT_ANTIBIOTICS_BILIARY_001','Antibiotics (biliary)',        'Pharmacological', 'ACTIVE'),
+  ('TRT_ANALGESICS_001',         'Analgesics',                   'Pharmacological', 'ACTIVE')
+ON CONFLICT (canonical_id) DO NOTHING;
