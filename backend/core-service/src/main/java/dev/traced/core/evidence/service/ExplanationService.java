@@ -10,9 +10,11 @@ import dev.traced.core.evidence.repository.EvidenceChunkRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
+import java.time.Duration;
 import java.util.*;
 
 @Service
@@ -20,14 +22,29 @@ import java.util.*;
 @Slf4j
 public class ExplanationService {
 
+    private static final String CACHE_PREFIX = "exp:cache:";
+    private static final Duration CACHE_TTL = Duration.ofMinutes(10);
+
     private final CandidateClaimRepository candidateClaimRepository;
     private final EvidenceChunkRepository evidenceChunkRepository;
     private final ObjectMapper objectMapper;
+    private final StringRedisTemplate redisTemplate;
 
     @Value("${traced.intelligence-service.url:http://localhost:8000}")
     private String intelligenceServiceUrl;
 
     public GroundedExplanationDto generateExplanation(String canonicalId) {
+        // Check Redis cache first
+        String cacheKey = CACHE_PREFIX + canonicalId;
+        String cached = redisTemplate.opsForValue().get(cacheKey);
+        if (cached != null) {
+            try {
+                return objectMapper.readValue(cached, GroundedExplanationDto.class);
+            } catch (Exception e) {
+                log.warn("Failed to deserialize cached explanation for {}", canonicalId, e);
+            }
+        }
+
         // Only fetch APPROVED claims — never CANDIDATE
         List<CandidateClaim> approvedClaims = candidateClaimRepository
             .findBySubjectCanonicalIdAndStatus(canonicalId, "APPROVED");
@@ -84,6 +101,7 @@ public class ExplanationService {
         // Call FastAPI grounding service
         RestClient restClient = RestClient.create(intelligenceServiceUrl);
 
+        GroundedExplanationDto result;
         try {
             JsonNode response = restClient.post()
                 .uri("/intelligence/grounding/explain")
@@ -106,7 +124,7 @@ public class ExplanationService {
                 response.get("cited_chunk_ids").forEach(n -> citedChunkIds.add(n.asText()));
             }
 
-            return GroundedExplanationDto.builder()
+            result = GroundedExplanationDto.builder()
                 .explanationText(response.path("explanation_text").asText(""))
                 .citedClaimIds(citedClaimIds)
                 .citedChunkIds(citedChunkIds)
@@ -117,6 +135,16 @@ public class ExplanationService {
             log.error("Failed to call intelligence service for {}", canonicalId, e);
             return uncertainResponse();
         }
+
+        // Write to Redis cache with 10-min TTL
+        try {
+            String json = objectMapper.writeValueAsString(result);
+            redisTemplate.opsForValue().set(cacheKey, json, CACHE_TTL);
+        } catch (Exception e) {
+            log.warn("Failed to cache explanation for {}", canonicalId, e);
+        }
+
+        return result;
     }
 
     private GroundedExplanationDto uncertainResponse() {
