@@ -124,11 +124,16 @@ public class ExplanationService {
                 response.get("cited_chunk_ids").forEach(n -> citedChunkIds.add(n.asText()));
             }
 
+            String contradictionNotice = response.has("contradiction_notice") && !response.get("contradiction_notice").isNull()
+                ? response.get("contradiction_notice").asText()
+                : null;
+
             result = GroundedExplanationDto.builder()
                 .explanationText(response.path("explanation_text").asText(""))
                 .citedClaimIds(citedClaimIds)
                 .citedChunkIds(citedChunkIds)
                 .confidenceLabel(response.path("confidence_label").asText("UNCERTAIN"))
+                .contradictionNotice(contradictionNotice)
                 .build();
 
         } catch (Exception e) {

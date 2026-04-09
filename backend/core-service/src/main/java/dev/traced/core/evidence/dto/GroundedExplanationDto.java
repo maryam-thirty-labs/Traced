@@ -9,5 +9,6 @@ public record GroundedExplanationDto(
     String explanationText,
     List<String> citedClaimIds,
     List<String> citedChunkIds,
-    String confidenceLabel
+    String confidenceLabel,
+    String contradictionNotice
 ) {}

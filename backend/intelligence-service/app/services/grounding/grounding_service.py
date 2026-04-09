@@ -1,8 +1,8 @@
-import json
 from pydantic import BaseModel
 from openai import AsyncOpenAI
 
 from app.config import settings
+from app.services.extraction.conflict_detector import check_conflicts
 
 UNCERTAIN_TEXT = (
     "There is currently insufficient approved evidence to provide a grounded explanation "
@@ -36,6 +36,7 @@ class GroundedExplanation(BaseModel):
     cited_claim_ids: list[str]
     cited_chunk_ids: list[str]
     confidence_label: str  # HIGH, MEDIUM, LOW, UNCERTAIN
+    contradiction_notice: str | None = None
 
 
 _client: AsyncOpenAI | None = None
@@ -82,6 +83,7 @@ async def generate_explanation(
             cited_claim_ids=[],
             cited_chunk_ids=[],
             confidence_label="UNCERTAIN",
+            contradiction_notice=None,
         )
 
     # Collect unique sources
@@ -127,9 +129,24 @@ async def generate_explanation(
         for i, c in enumerate(chunks)
     ]
 
+    # Check for contradictions among approved claims
+    contradiction_notice = None
+    for i, claim in enumerate(approved_claims):
+        others = approved_claims[:i] + approved_claims[i + 1:]
+        result = check_conflicts(claim, others)
+        if result.has_conflict:
+            contradiction_notice = (
+                "Some approved evidence for this structure contains conflicting claims. "
+                "The explanation reflects the majority view, but clinical judgement should "
+                "be applied. Conflicting claim IDs: "
+                + ", ".join(result.conflicting_claim_ids)
+            )
+            break
+
     return GroundedExplanation(
         explanation_text=explanation_text,
         cited_claim_ids=cited_claim_ids,
         cited_chunk_ids=cited_chunk_ids,
         confidence_label=confidence_label,
+        contradiction_notice=contradiction_notice,
     )
