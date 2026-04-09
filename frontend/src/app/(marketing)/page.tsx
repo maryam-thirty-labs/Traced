@@ -56,9 +56,62 @@ export default function LandingPage() {
           ))}
         </div>
       </section>
+
+      {/* Etymology demo */}
+      <section className="px-6 py-16 max-w-5xl mx-auto">
+        <div className="text-center mb-10">
+          <h2 className="text-2xl font-bold text-text-primary">Words have roots. So does disease.</h2>
+          <p className="text-sm text-text-secondary mt-2">Every disease name tells a story. Traced breaks it down.</p>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {ETYMOLOGY_DEMOS.map((demo) => (
+            <div key={demo.name} className="rounded-lg border border-border-subtle bg-surface-card p-5 space-y-3">
+              <h4 className="text-sm font-semibold text-text-primary">{demo.name}</h4>
+              <div className="flex flex-wrap gap-1">
+                {demo.parts.map((part, i) => (
+                  <span key={i} className="text-xs px-2 py-1 rounded bg-accent-muted text-accent-text">
+                    {part.root} <span className="text-text-muted">= {part.meaning}</span>
+                  </span>
+                ))}
+              </div>
+              <p className="text-xs text-text-secondary italic">{demo.plain}</p>
+            </div>
+          ))}
+        </div>
+      </section>
     </div>
   );
 }
+
+const ETYMOLOGY_DEMOS = [
+  {
+    name: "Cholecystitis",
+    parts: [
+      { root: "chole-", meaning: "bile" },
+      { root: "-cyst-", meaning: "bladder" },
+      { root: "-itis", meaning: "inflammation" },
+    ],
+    plain: "Inflammation of the gallbladder",
+  },
+  {
+    name: "Osteoporosis",
+    parts: [
+      { root: "osteo-", meaning: "bone" },
+      { root: "por-", meaning: "pore" },
+      { root: "-osis", meaning: "condition" },
+    ],
+    plain: "A condition of porous, weakened bones",
+  },
+  {
+    name: "Myocardial infarction",
+    parts: [
+      { root: "myo-", meaning: "muscle" },
+      { root: "cardi-", meaning: "heart" },
+      { root: "infarct-", meaning: "tissue death" },
+    ],
+    plain: "Death of heart muscle tissue — a heart attack",
+  },
+];
 
 const PILLARS = [
   {
