@@ -79,6 +79,31 @@ export default function LandingPage() {
           ))}
         </div>
       </section>
+
+      {/* Feature grid */}
+      <section className="px-6 py-16 max-w-5xl mx-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {FEATURES.map((f) => (
+            <div key={f.title} className="rounded-lg border border-border-subtle bg-surface-panel p-5 space-y-2">
+              <span className="text-2xl">{f.icon}</span>
+              <h3 className="text-sm font-semibold text-text-primary">{f.title}</h3>
+              <p className="text-xs text-text-secondary leading-relaxed">{f.description}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Stats row */}
+      <section className="px-6 py-12 max-w-5xl mx-auto">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          {STATS.map((s) => (
+            <div key={s.label} className="flex flex-col items-center gap-1 py-4">
+              <span className="text-2xl font-bold text-accent-text">{s.value}</span>
+              <span className="text-xs text-text-muted">{s.label}</span>
+            </div>
+          ))}
+        </div>
+      </section>
     </div>
   );
 }
@@ -111,6 +136,36 @@ const ETYMOLOGY_DEMOS = [
     ],
     plain: "Death of heart muscle tissue — a heart attack",
   },
+];
+
+const FEATURES = [
+  {
+    title: "Interactive Body Map",
+    icon: "\u{1FAC0}",
+    description: "Click anatomical structures on a real SVG body map. Filter by system. See what connects to what.",
+  },
+  {
+    title: "Mystery Cases",
+    icon: "\u{1F50D}",
+    description: "Clinical vignettes with clues, questions, and XP. Diagnose, reason through mechanisms, and pick the right treatment.",
+  },
+  {
+    title: "Evidence-Grounded Explanations",
+    icon: "\u{1F4C4}",
+    description: "Every explanation cites NICE guidelines, PubMed reviews, or MedlinePlus. Confidence labels tell you how strong the evidence is.",
+  },
+  {
+    title: "Progression System",
+    icon: "\u{1F4C8}",
+    description: "Earn XP, level up, unlock new body systems, and track mastery per system with detailed progress bars.",
+  },
+];
+
+const STATS = [
+  { value: "3", label: "Body systems" },
+  { value: "14", label: "Diseases" },
+  { value: "10", label: "Mystery cases" },
+  { value: "18", label: "Evidence sources" },
 ];
 
 const PILLARS = [
