@@ -903,3 +903,60 @@ FROM (VALUES
 JOIN diseases d ON d.canonical_id = v.dis_cid
 JOIN mechanisms m ON m.canonical_id = v.mech_cid
 ON CONFLICT (disease_id, mechanism_id) DO NOTHING;
+
+-- ============================================================
+-- Sprint 7.7 — Cardiovascular case pack (3 cases)
+-- ============================================================
+
+INSERT INTO cases (case_id, title, subtitle, linked_anatomy_id, linked_disease_id, difficulty, estimated_minutes, xp_reward, status)
+SELECT v.cid, v.title, v.subtitle, ap.id, d.id, v.diff, v.mins, v.xp, 'ACTIVE'
+FROM (VALUES
+  ('MC_CARDIO_001', 'The 3am chest pain',     'A 62-year-old man wakes with crushing central chest pain radiating to his left arm.',  'ANAT_CORONARY_ARTERY_001', 'DIS_MYOCARDIAL_INFARCTION_001', 'MEDIUM', 15, 100),
+  ('MC_CARDIO_002', 'The breathless banker',   'A 74-year-old presents with progressive exertional dyspnoea and syncope on exertion.', 'ANAT_AORTIC_VALVE_001',    'DIS_AORTIC_STENOSIS_001',       'HARD',   20, 120),
+  ('MC_CARDIO_003', 'The irregular pulse',     'A 68-year-old is found to have an irregularly irregular pulse at a routine check-up.',  'ANAT_HEART_001',           'DIS_ATRIAL_FIBRILLATION_001',   'EASY',   10, 80)
+) AS v(cid, title, subtitle, anat_cid, dis_cid, diff, mins, xp)
+JOIN anatomy_parts ap ON ap.canonical_id = v.anat_cid
+JOIN diseases d ON d.canonical_id = v.dis_cid
+ON CONFLICT (case_id) DO NOTHING;
+
+INSERT INTO case_vignettes (case_id, patient_age, patient_sex, presenting_complaint, history_text, full_vignette_text)
+SELECT c.id, v.age, v.sex, v.complaint, v.history, v.full
+FROM cases c JOIN (VALUES
+  ('MC_CARDIO_001', 62, 'Male', 'Crushing central chest pain at rest',
+   'Woke at 3am with severe chest pain. Diaphoretic and nauseous. Smoker, hypertensive, diabetic.',
+   'A 62-year-old man presents to the emergency department at 3:30am with crushing central chest pain that woke him from sleep. The pain radiates to his left arm and jaw. He is diaphoretic and nauseous. He has a 30-year smoking history, type 2 diabetes, and hypertension. His father died of a heart attack at age 58.'),
+  ('MC_CARDIO_002', 74, 'Male', 'Progressive exertional dyspnoea and syncope',
+   'Increasing breathlessness over 12 months. Two episodes of syncope on exertion. Known ejection systolic murmur.',
+   'A 74-year-old retired banker presents with progressive exertional dyspnoea over the past 12 months. He has had two episodes of syncope, both occurring during his morning walk. He was told he had a heart murmur 5 years ago but declined investigation. On examination there is a harsh crescendo-decrescendo ejection systolic murmur radiating to the carotids, with a slow-rising pulse.'),
+  ('MC_CARDIO_003', 68, 'Female', 'Irregularly irregular pulse found incidentally',
+   'Routine check-up. No palpitations or chest pain. On amlodipine for hypertension.',
+   'A 68-year-old woman attends her GP for a routine medication review. She feels well with no palpitations, chest pain, or breathlessness. On examination, her pulse is irregularly irregular at 82 bpm. She is normotensive on amlodipine 5mg. An ECG confirms the rhythm abnormality with absent P waves and irregular R-R intervals.')
+) AS v(cid, age, sex, complaint, history, full) ON c.case_id = v.cid
+WHERE NOT EXISTS (SELECT 1 FROM case_vignettes cv WHERE cv.case_id = c.id);
+
+-- MC_CARDIO_001 questions + options
+INSERT INTO case_questions (case_id, step_number, question_text, question_type)
+SELECT c.id, v.step, v.text, v.qtype FROM cases c CROSS JOIN (VALUES (1,'What is the most likely diagnosis?','DIAGNOSIS'),(2,'Which investigation is most urgent?','REASONING'),(3,'What is the underlying mechanism?','MECHANISM'),(4,'What is the immediate priority treatment?','TREATMENT')) AS v(step,text,qtype) WHERE c.case_id='MC_CARDIO_001' AND NOT EXISTS (SELECT 1 FROM case_questions cq WHERE cq.case_id=c.id AND cq.step_number=v.step);
+
+INSERT INTO case_options (question_id,option_key,option_text,is_correct) SELECT q.id,v.key,v.text,v.correct FROM case_questions q JOIN cases c ON c.id=q.case_id CROSS JOIN (VALUES ('A','Unstable angina',false),('B','ST-elevation myocardial infarction',true),('C','Pulmonary embolism',false),('D','Aortic dissection',false)) AS v(key,text,correct) WHERE c.case_id='MC_CARDIO_001' AND q.step_number=1 AND NOT EXISTS (SELECT 1 FROM case_options co WHERE co.question_id=q.id AND co.option_key=v.key);
+INSERT INTO case_options (question_id,option_key,option_text,is_correct) SELECT q.id,v.key,v.text,v.correct FROM case_questions q JOIN cases c ON c.id=q.case_id CROSS JOIN (VALUES ('A','Chest X-ray',false),('B','12-lead ECG',true),('C','CT pulmonary angiogram',false),('D','Echocardiogram',false)) AS v(key,text,correct) WHERE c.case_id='MC_CARDIO_001' AND q.step_number=2 AND NOT EXISTS (SELECT 1 FROM case_options co WHERE co.question_id=q.id AND co.option_key=v.key);
+INSERT INTO case_options (question_id,option_key,option_text,is_correct) SELECT q.id,v.key,v.text,v.correct FROM case_questions q JOIN cases c ON c.id=q.case_id CROSS JOIN (VALUES ('A','Coronary vasospasm',false),('B','Atherosclerotic plaque rupture with coronary thrombosis',true),('C','Aortic root dilation',false),('D','Pericardial effusion',false)) AS v(key,text,correct) WHERE c.case_id='MC_CARDIO_001' AND q.step_number=3 AND NOT EXISTS (SELECT 1 FROM case_options co WHERE co.question_id=q.id AND co.option_key=v.key);
+INSERT INTO case_options (question_id,option_key,option_text,is_correct) SELECT q.id,v.key,v.text,v.correct FROM case_questions q JOIN cases c ON c.id=q.case_id CROSS JOIN (VALUES ('A','Oral aspirin and outpatient review',false),('B','Dual antiplatelet therapy and emergency PCI',true),('C','IV heparin and bed rest',false),('D','Thrombolysis only',false)) AS v(key,text,correct) WHERE c.case_id='MC_CARDIO_001' AND q.step_number=4 AND NOT EXISTS (SELECT 1 FROM case_options co WHERE co.question_id=q.id AND co.option_key=v.key);
+
+-- MC_CARDIO_002 questions + options
+INSERT INTO case_questions (case_id, step_number, question_text, question_type)
+SELECT c.id, v.step, v.text, v.qtype FROM cases c CROSS JOIN (VALUES (1,'What is the most likely diagnosis?','DIAGNOSIS'),(2,'What is the key auscultatory finding?','REASONING'),(3,'What is the pathological process?','MECHANISM'),(4,'What is the definitive treatment?','TREATMENT')) AS v(step,text,qtype) WHERE c.case_id='MC_CARDIO_002' AND NOT EXISTS (SELECT 1 FROM case_questions cq WHERE cq.case_id=c.id AND cq.step_number=v.step);
+
+INSERT INTO case_options (question_id,option_key,option_text,is_correct) SELECT q.id,v.key,v.text,v.correct FROM case_questions q JOIN cases c ON c.id=q.case_id CROSS JOIN (VALUES ('A','Mitral regurgitation',false),('B','Severe aortic stenosis',true),('C','Hypertrophic cardiomyopathy',false),('D','Pulmonary hypertension',false)) AS v(key,text,correct) WHERE c.case_id='MC_CARDIO_002' AND q.step_number=1 AND NOT EXISTS (SELECT 1 FROM case_options co WHERE co.question_id=q.id AND co.option_key=v.key);
+INSERT INTO case_options (question_id,option_key,option_text,is_correct) SELECT q.id,v.key,v.text,v.correct FROM case_questions q JOIN cases c ON c.id=q.case_id CROSS JOIN (VALUES ('A','Pan-systolic murmur at apex',false),('B','Ejection systolic murmur radiating to carotids with slow-rising pulse',true),('C','Early diastolic murmur at left sternal edge',false),('D','Continuous machinery murmur',false)) AS v(key,text,correct) WHERE c.case_id='MC_CARDIO_002' AND q.step_number=2 AND NOT EXISTS (SELECT 1 FROM case_options co WHERE co.question_id=q.id AND co.option_key=v.key);
+INSERT INTO case_options (question_id,option_key,option_text,is_correct) SELECT q.id,v.key,v.text,v.correct FROM case_questions q JOIN cases c ON c.id=q.case_id CROSS JOIN (VALUES ('A','Mitral annular dilation',false),('B','Calcific degeneration of valve leaflets',true),('C','Infective endocarditis',false),('D','Rheumatic valve disease',false)) AS v(key,text,correct) WHERE c.case_id='MC_CARDIO_002' AND q.step_number=3 AND NOT EXISTS (SELECT 1 FROM case_options co WHERE co.question_id=q.id AND co.option_key=v.key);
+INSERT INTO case_options (question_id,option_key,option_text,is_correct) SELECT q.id,v.key,v.text,v.correct FROM case_questions q JOIN cases c ON c.id=q.case_id CROSS JOIN (VALUES ('A','Lifelong medical management only',false),('B','Aortic valve replacement (surgical or TAVI)',true),('C','Balloon valvuloplasty',false),('D','Rate control with beta-blockers',false)) AS v(key,text,correct) WHERE c.case_id='MC_CARDIO_002' AND q.step_number=4 AND NOT EXISTS (SELECT 1 FROM case_options co WHERE co.question_id=q.id AND co.option_key=v.key);
+
+-- MC_CARDIO_003 questions + options
+INSERT INTO case_questions (case_id, step_number, question_text, question_type)
+SELECT c.id, v.step, v.text, v.qtype FROM cases c CROSS JOIN (VALUES (1,'What rhythm is demonstrated?','DIAGNOSIS'),(2,'What ECG feature confirms the diagnosis?','REASONING'),(3,'What is the electrical mechanism?','MECHANISM'),(4,'What is the most important long-term consideration?','TREATMENT')) AS v(step,text,qtype) WHERE c.case_id='MC_CARDIO_003' AND NOT EXISTS (SELECT 1 FROM case_questions cq WHERE cq.case_id=c.id AND cq.step_number=v.step);
+
+INSERT INTO case_options (question_id,option_key,option_text,is_correct) SELECT q.id,v.key,v.text,v.correct FROM case_questions q JOIN cases c ON c.id=q.case_id CROSS JOIN (VALUES ('A','Atrial flutter',false),('B','Atrial fibrillation',true),('C','Ventricular tachycardia',false),('D','Supraventricular tachycardia',false)) AS v(key,text,correct) WHERE c.case_id='MC_CARDIO_003' AND q.step_number=1 AND NOT EXISTS (SELECT 1 FROM case_options co WHERE co.question_id=q.id AND co.option_key=v.key);
+INSERT INTO case_options (question_id,option_key,option_text,is_correct) SELECT q.id,v.key,v.text,v.correct FROM case_questions q JOIN cases c ON c.id=q.case_id CROSS JOIN (VALUES ('A','ST elevation in leads II, III, aVF',false),('B','Absent P waves with irregular R-R intervals',true),('C','Delta waves with short PR interval',false),('D','Saw-tooth baseline pattern',false)) AS v(key,text,correct) WHERE c.case_id='MC_CARDIO_003' AND q.step_number=2 AND NOT EXISTS (SELECT 1 FROM case_options co WHERE co.question_id=q.id AND co.option_key=v.key);
+INSERT INTO case_options (question_id,option_key,option_text,is_correct) SELECT q.id,v.key,v.text,v.correct FROM case_questions q JOIN cases c ON c.id=q.case_id CROSS JOIN (VALUES ('A','Single macro re-entry circuit',false),('B','Multiple re-entry wavelets in the atria',true),('C','Enhanced automaticity of the AV node',false),('D','Accessory pathway conduction',false)) AS v(key,text,correct) WHERE c.case_id='MC_CARDIO_003' AND q.step_number=3 AND NOT EXISTS (SELECT 1 FROM case_options co WHERE co.question_id=q.id AND co.option_key=v.key);
+INSERT INTO case_options (question_id,option_key,option_text,is_correct) SELECT q.id,v.key,v.text,v.correct FROM case_questions q JOIN cases c ON c.id=q.case_id CROSS JOIN (VALUES ('A','Immediate cardioversion',false),('B','Stroke risk assessment and anticoagulation',true),('C','Ablation as first-line',false),('D','No treatment if asymptomatic',false)) AS v(key,text,correct) WHERE c.case_id='MC_CARDIO_003' AND q.step_number=4 AND NOT EXISTS (SELECT 1 FROM case_options co WHERE co.question_id=q.id AND co.option_key=v.key);
