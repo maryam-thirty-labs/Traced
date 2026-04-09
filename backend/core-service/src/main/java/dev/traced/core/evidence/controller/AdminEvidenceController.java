@@ -51,7 +51,7 @@ public class AdminEvidenceController {
                 .relationType((String) c.get("relation_type"))
                 .objectCanonicalId((String) c.get("object_canonical_id"))
                 .claimText((String) c.get("claim_text"))
-                .confidence(((Number) c.get("confidence")).doubleValue())
+                .confidence(new java.math.BigDecimal(c.get("confidence").toString()))
                 .status("CANDIDATE") // Always CANDIDATE — regardless of what FastAPI sends
                 .extractionModel((String) c.get("extraction_model"))
                 .build();

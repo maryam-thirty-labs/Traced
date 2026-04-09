@@ -33,8 +33,8 @@ public class CandidateClaim {
     @Column(name = "claim_text", nullable = false, columnDefinition = "TEXT")
     private String claimText;
 
-    @Column(nullable = false)
-    private Double confidence;
+    @Column(nullable = false, precision = 5, scale = 3)
+    private java.math.BigDecimal confidence;
 
     @Column(nullable = false)
     @Builder.Default
