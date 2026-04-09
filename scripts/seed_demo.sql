@@ -844,3 +844,62 @@ INSERT INTO anatomy_parts (canonical_id, display_name, system_id, region, overvi
     (SELECT id FROM body_systems WHERE canonical_id = 'SYS_CARDIOVASCULAR_001'),
     'Mediastinum', 'The double-layered fibroserous sac enclosing the heart, providing protection and reducing friction.', 'ACTIVE')
 ON CONFLICT (canonical_id) DO NOTHING;
+
+-- ============================================================
+-- Sprint 7.6 — Cardiovascular diseases (5) + mechanisms + relations
+-- ============================================================
+
+INSERT INTO diseases (canonical_id, name, etymology_json, commonness, category, status) VALUES
+  ('DIS_MYOCARDIAL_INFARCTION_001', 'Myocardial infarction',
+    '[{"part":"myo-","meaning":"muscle"},{"part":"cardi-","meaning":"heart"},{"part":"-al","meaning":"relating to"},{"part":"infarct-","meaning":"tissue death"},{"part":"-ion","meaning":"process"}]',
+    'VERY_COMMON', 'Cardiovascular', 'ACTIVE'),
+  ('DIS_ATRIAL_FIBRILLATION_001', 'Atrial fibrillation',
+    '[{"part":"atri-","meaning":"atrium/chamber"},{"part":"-al","meaning":"relating to"},{"part":"fibrillat-","meaning":"quivering"},{"part":"-ion","meaning":"process"}]',
+    'VERY_COMMON', 'Cardiovascular', 'ACTIVE'),
+  ('DIS_AORTIC_STENOSIS_001', 'Aortic stenosis',
+    '[{"part":"aort-","meaning":"aorta"},{"part":"-ic","meaning":"relating to"},{"part":"sten-","meaning":"narrowing"},{"part":"-osis","meaning":"condition"}]',
+    'COMMON', 'Cardiovascular', 'ACTIVE'),
+  ('DIS_MITRAL_REGURGITATION_001', 'Mitral regurgitation',
+    '[{"part":"mitr-","meaning":"mitre-shaped"},{"part":"-al","meaning":"relating to"},{"part":"re-","meaning":"back"},{"part":"gurgitat-","meaning":"to flood"},{"part":"-ion","meaning":"process"}]',
+    'COMMON', 'Cardiovascular', 'ACTIVE'),
+  ('DIS_PERICARDITIS_001', 'Pericarditis',
+    '[{"part":"peri-","meaning":"around"},{"part":"cardi-","meaning":"heart"},{"part":"-itis","meaning":"inflammation"}]',
+    'LESS_COMMON', 'Cardiovascular', 'ACTIVE')
+ON CONFLICT (canonical_id) DO NOTHING;
+
+-- Cardiovascular mechanisms
+INSERT INTO mechanisms (canonical_id, name, description, status) VALUES
+  ('MECH_ATHEROSCLEROTIC_PLAQUE_001', 'Atherosclerotic plaque rupture', 'Rupture of a vulnerable coronary plaque triggers thrombosis and acute luminal occlusion.', 'ACTIVE'),
+  ('MECH_ELECTRICAL_REENTRY_001', 'Electrical re-entry', 'Disorganised atrial electrical activity due to multiple re-entry circuits replacing normal sinus rhythm.', 'ACTIVE'),
+  ('MECH_CALCIFIC_DEGENERATION_001', 'Calcific degeneration', 'Progressive calcium deposition on valve leaflets restricts opening and increases transvalvular gradient.', 'ACTIVE'),
+  ('MECH_VIRAL_INFLAMMATION_001', 'Viral pericardial inflammation', 'Viral infection triggers immune-mediated inflammation of the pericardial layers.', 'ACTIVE')
+ON CONFLICT (canonical_id) DO NOTHING;
+
+-- Anatomy ↔ Disease relations (cardiovascular)
+INSERT INTO anatomy_disease_relations (anatomy_part_id, disease_id, relation_strength)
+SELECT ap.id, d.id, v.strength
+FROM (VALUES
+  ('ANAT_CORONARY_ARTERY_001', 'DIS_MYOCARDIAL_INFARCTION_001', 'PRIMARY'),
+  ('ANAT_HEART_001',           'DIS_MYOCARDIAL_INFARCTION_001', 'PRIMARY'),
+  ('ANAT_HEART_001',           'DIS_ATRIAL_FIBRILLATION_001',   'PRIMARY'),
+  ('ANAT_AORTIC_VALVE_001',    'DIS_AORTIC_STENOSIS_001',       'PRIMARY'),
+  ('ANAT_MITRAL_VALVE_001',    'DIS_MITRAL_REGURGITATION_001',  'PRIMARY'),
+  ('ANAT_PERICARDIUM_001',     'DIS_PERICARDITIS_001',          'PRIMARY'),
+  ('ANAT_AORTA_001',           'DIS_AORTIC_STENOSIS_001',       'SECONDARY')
+) AS v(anat_cid, dis_cid, strength)
+JOIN anatomy_parts ap ON ap.canonical_id = v.anat_cid
+JOIN diseases d ON d.canonical_id = v.dis_cid
+ON CONFLICT (anatomy_part_id, disease_id) DO NOTHING;
+
+-- Disease ↔ Mechanism relations (cardiovascular)
+INSERT INTO disease_mechanism_relations (disease_id, mechanism_id)
+SELECT d.id, m.id
+FROM (VALUES
+  ('DIS_MYOCARDIAL_INFARCTION_001', 'MECH_ATHEROSCLEROTIC_PLAQUE_001'),
+  ('DIS_ATRIAL_FIBRILLATION_001',   'MECH_ELECTRICAL_REENTRY_001'),
+  ('DIS_AORTIC_STENOSIS_001',       'MECH_CALCIFIC_DEGENERATION_001'),
+  ('DIS_PERICARDITIS_001',          'MECH_VIRAL_INFLAMMATION_001')
+) AS v(dis_cid, mech_cid)
+JOIN diseases d ON d.canonical_id = v.dis_cid
+JOIN mechanisms m ON m.canonical_id = v.mech_cid
+ON CONFLICT (disease_id, mechanism_id) DO NOTHING;
