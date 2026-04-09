@@ -1,4 +1,4 @@
-import { get, patch } from "@/shared/lib/api/http";
+import { get, patch, del } from "@/shared/lib/api/http";
 import type { UserProfileDto, ProgressDto } from "../types/progress.types";
 
 export async function getProfile(): Promise<UserProfileDto> {
@@ -14,4 +14,8 @@ export async function updatePreferences(prefs: {
   preferredSystem?: string;
 }): Promise<void> {
   await patch("/api/profile/me/preferences", prefs);
+}
+
+export async function resetProgress(): Promise<void> {
+  await del("/api/profile/me/progress", { confirmationPhrase: "RESET_MY_PROGRESS" });
 }

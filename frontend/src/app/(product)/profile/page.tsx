@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { getProfile, updatePreferences } from "@/features/progression/lib/progressApi";
+import { useRouter } from "next/navigation";
+import { getProfile, updatePreferences, resetProgress } from "@/features/progression/lib/progressApi";
+import { ResetProgressModal } from "@/features/progression/components/ResetProgressModal";
 import { SkeletonLoader } from "@/shared/ui/SkeletonLoader";
 import { ErrorState } from "@/shared/ui/ErrorState";
 import type { UserProfileDto } from "@/features/progression/types/progress.types";
@@ -24,9 +26,11 @@ const SYSTEM_LABELS: Record<string, string> = {
 };
 
 export default function ProfilePage() {
+  const router = useRouter();
   const [profile, setProfile] = useState<UserProfileDto | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [showResetModal, setShowResetModal] = useState(false);
 
   const fetchProfile = useCallback(() => {
     setLoading(true);
@@ -175,6 +179,27 @@ export default function ProfilePage() {
           })}
         </div>
       </div>
+
+      {/* Danger zone */}
+      <div className="space-y-3 pt-4 border-t border-border-subtle">
+        <h3 className="text-sm font-semibold text-red-400">Danger Zone</h3>
+        <button
+          onClick={() => setShowResetModal(true)}
+          className="text-xs font-medium px-3 py-1.5 rounded-lg border border-red-400/30 text-red-400 hover:bg-red-400/10"
+        >
+          Reset progress
+        </button>
+      </div>
+
+      {showResetModal && (
+        <ResetProgressModal
+          onCancel={() => setShowResetModal(false)}
+          onConfirm={async () => {
+            await resetProgress();
+            router.push("/explorer");
+          }}
+        />
+      )}
     </div>
   );
 }
