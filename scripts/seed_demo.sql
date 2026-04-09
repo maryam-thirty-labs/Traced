@@ -655,3 +655,70 @@ INSERT INTO anatomy_parts (canonical_id, display_name, system_id, region, overvi
     (SELECT id FROM body_systems WHERE canonical_id = 'SYS_SKELETAL_001'),
     'Lower back', 'The 5 lower vertebrae (L1–L5) bearing the most body weight and enabling trunk flexion.', 'ACTIVE')
 ON CONFLICT (canonical_id) DO NOTHING;
+
+-- ============================================================
+-- Sprint 7.2 — Skeletal diseases (6) + relations
+-- ============================================================
+
+INSERT INTO diseases (canonical_id, name, etymology_json, commonness, category, status) VALUES
+  ('DIS_FEMORAL_FRACTURE_001', 'Femoral fracture',
+    '[{"part":"femor-","meaning":"thigh bone"},{"part":"-al","meaning":"relating to"}]',
+    'COMMON', 'Skeletal', 'ACTIVE'),
+  ('DIS_OSTEOARTHRITIS_001', 'Osteoarthritis',
+    '[{"part":"osteo-","meaning":"bone"},{"part":"arthr-","meaning":"joint"},{"part":"-itis","meaning":"inflammation"}]',
+    'VERY_COMMON', 'Skeletal', 'ACTIVE'),
+  ('DIS_OSTEOPOROSIS_001', 'Osteoporosis',
+    '[{"part":"osteo-","meaning":"bone"},{"part":"por-","meaning":"pore/passage"},{"part":"-osis","meaning":"condition"}]',
+    'VERY_COMMON', 'Skeletal', 'ACTIVE'),
+  ('DIS_DISC_HERNIATION_001', 'Disc herniation',
+    '[{"part":"disc","meaning":"intervertebral disc"},{"part":"herni-","meaning":"protrusion"},{"part":"-ation","meaning":"process"}]',
+    'COMMON', 'Skeletal', 'ACTIVE'),
+  ('DIS_COLLES_FRACTURE_001', 'Colles fracture',
+    '[{"part":"Colles","meaning":"Abraham Colles (surgeon)"},{"part":"fracture","meaning":"break"}]',
+    'COMMON', 'Skeletal', 'ACTIVE'),
+  ('DIS_PATELLOFEMORAL_SYNDROME_001', 'Patellofemoral pain syndrome',
+    '[{"part":"patello-","meaning":"kneecap"},{"part":"femor-","meaning":"thigh bone"},{"part":"-al","meaning":"relating to"}]',
+    'VERY_COMMON', 'Skeletal', 'ACTIVE')
+ON CONFLICT (canonical_id) DO NOTHING;
+
+-- Skeletal mechanisms
+INSERT INTO mechanisms (canonical_id, name, description, status) VALUES
+  ('MECH_TRAUMATIC_FORCE_001', 'Traumatic force', 'High-energy impact exceeding bone tensile strength causes fracture.', 'ACTIVE'),
+  ('MECH_CARTILAGE_DEGENERATION_001', 'Cartilage degeneration', 'Progressive loss of articular cartilage exposes subchondral bone.', 'ACTIVE'),
+  ('MECH_BONE_RESORPTION_001', 'Bone resorption', 'Osteoclast activity exceeds osteoblast formation, reducing bone density.', 'ACTIVE'),
+  ('MECH_DISC_DEGENERATION_001', 'Disc degeneration', 'Loss of disc hydration and annular tears allow nucleus pulposus herniation.', 'ACTIVE')
+ON CONFLICT (canonical_id) DO NOTHING;
+
+-- Anatomy ↔ Disease relations (skeletal)
+INSERT INTO anatomy_disease_relations (anatomy_part_id, disease_id, relation_strength)
+SELECT ap.id, d.id, v.strength
+FROM (VALUES
+  ('ANAT_FEMUR_001',          'DIS_FEMORAL_FRACTURE_001',           'PRIMARY'),
+  ('ANAT_FEMUR_001',          'DIS_OSTEOPOROSIS_001',               'SECONDARY'),
+  ('ANAT_PATELLA_001',        'DIS_PATELLOFEMORAL_SYNDROME_001',    'PRIMARY'),
+  ('ANAT_PATELLA_001',        'DIS_OSTEOARTHRITIS_001',             'SECONDARY'),
+  ('ANAT_LUMBAR_SPINE_001',   'DIS_DISC_HERNIATION_001',            'PRIMARY'),
+  ('ANAT_LUMBAR_SPINE_001',   'DIS_OSTEOARTHRITIS_001',             'SECONDARY'),
+  ('ANAT_RADIUS_001',         'DIS_COLLES_FRACTURE_001',            'PRIMARY'),
+  ('ANAT_RADIUS_001',         'DIS_OSTEOPOROSIS_001',               'SECONDARY'),
+  ('ANAT_CERVICAL_SPINE_001', 'DIS_DISC_HERNIATION_001',            'SECONDARY'),
+  ('ANAT_HUMERUS_001',        'DIS_OSTEOPOROSIS_001',               'SECONDARY')
+) AS v(anat_cid, dis_cid, strength)
+JOIN anatomy_parts ap ON ap.canonical_id = v.anat_cid
+JOIN diseases d ON d.canonical_id = v.dis_cid
+ON CONFLICT (anatomy_part_id, disease_id) DO NOTHING;
+
+-- Disease ↔ Mechanism relations (skeletal)
+INSERT INTO disease_mechanism_relations (disease_id, mechanism_id)
+SELECT d.id, m.id
+FROM (VALUES
+  ('DIS_FEMORAL_FRACTURE_001',           'MECH_TRAUMATIC_FORCE_001'),
+  ('DIS_OSTEOARTHRITIS_001',             'MECH_CARTILAGE_DEGENERATION_001'),
+  ('DIS_OSTEOPOROSIS_001',               'MECH_BONE_RESORPTION_001'),
+  ('DIS_DISC_HERNIATION_001',            'MECH_DISC_DEGENERATION_001'),
+  ('DIS_COLLES_FRACTURE_001',            'MECH_TRAUMATIC_FORCE_001'),
+  ('DIS_PATELLOFEMORAL_SYNDROME_001',    'MECH_CARTILAGE_DEGENERATION_001')
+) AS v(dis_cid, mech_cid)
+JOIN diseases d ON d.canonical_id = v.dis_cid
+JOIN mechanisms m ON m.canonical_id = v.mech_cid
+ON CONFLICT (disease_id, mechanism_id) DO NOTHING;
