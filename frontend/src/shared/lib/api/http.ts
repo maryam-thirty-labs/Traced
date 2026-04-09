@@ -1,3 +1,5 @@
+import { getToken } from "@/shared/lib/auth/auth";
+
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
 
 export class ApiError extends Error {
@@ -12,12 +14,18 @@ export class ApiError extends Error {
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const token = getToken();
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    ...(init?.headers as Record<string, string>),
+  };
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+
   const res = await fetch(`${BASE_URL}${path}`, {
     ...init,
-    headers: {
-      "Content-Type": "application/json",
-      ...init?.headers,
-    },
+    headers,
   });
 
   if (!res.ok) {
@@ -35,6 +43,13 @@ export function get<T>(path: string): Promise<T> {
 export function post<T>(path: string, body: unknown): Promise<T> {
   return request<T>(path, {
     method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+export function patch<T>(path: string, body: unknown): Promise<T> {
+  return request<T>(path, {
+    method: "PATCH",
     body: JSON.stringify(body),
   });
 }
