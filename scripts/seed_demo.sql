@@ -792,3 +792,30 @@ INSERT INTO case_options (question_id,option_key,option_text,is_correct) SELECT 
 INSERT INTO case_options (question_id,option_key,option_text,is_correct) SELECT q.id,v.key,v.text,v.correct FROM case_questions q JOIN cases c ON c.id=q.case_id CROSS JOIN (VALUES ('A','Pain on lumbar extension',false),('B','Numbness in big toe (L5 dermatome)',true),('C','Saddle anaesthesia',false),('D','Bilateral leg weakness',false)) AS v(key,text,correct) WHERE c.case_id='MC_SKELETAL_004' AND q.step_number=2 AND NOT EXISTS (SELECT 1 FROM case_options co WHERE co.question_id=q.id AND co.option_key=v.key);
 INSERT INTO case_options (question_id,option_key,option_text,is_correct) SELECT q.id,v.key,v.text,v.correct FROM case_questions q JOIN cases c ON c.id=q.case_id CROSS JOIN (VALUES ('A','Facet joint arthropathy',false),('B','Disc degeneration with nucleus pulposus herniation',true),('C','Ligamentum flavum hypertrophy',false),('D','Vertebral body fracture',false)) AS v(key,text,correct) WHERE c.case_id='MC_SKELETAL_004' AND q.step_number=3 AND NOT EXISTS (SELECT 1 FROM case_options co WHERE co.question_id=q.id AND co.option_key=v.key);
 INSERT INTO case_options (question_id,option_key,option_text,is_correct) SELECT q.id,v.key,v.text,v.correct FROM case_questions q JOIN cases c ON c.id=q.case_id CROSS JOIN (VALUES ('A','Immediate spinal surgery',false),('B','Conservative management with physiotherapy',true),('C','Epidural steroid injection',false),('D','Bed rest for 6 weeks',false)) AS v(key,text,correct) WHERE c.case_id='MC_SKELETAL_004' AND q.step_number=4 AND NOT EXISTS (SELECT 1 FROM case_options co WHERE co.question_id=q.id AND co.option_key=v.key);
+
+-- ============================================================
+-- Sprint 7.4 — Skeletal evidence sources
+-- ============================================================
+
+INSERT INTO source_documents (url, title, source_type, trust_score, jurisdiction, raw_text) VALUES
+  ('https://www.nice.org.uk/guidance/cg124',
+   'NICE CG124: Hip fracture — management',
+   'GUIDELINE', 0.95, 'UK',
+   'Hip fractures are a major cause of morbidity and mortality in older people. Patients should be offered surgery on the day of or the day after admission. Intracapsular fractures may be treated with internal fixation or arthroplasty depending on displacement. Multidisciplinary rehabilitation should begin from admission. Osteoporosis assessment and treatment should be initiated before discharge.'),
+  ('https://www.nice.org.uk/guidance/ng59',
+   'NICE NG59: Low back pain and sciatica',
+   'GUIDELINE', 0.95, 'UK',
+   'Low back pain is extremely common and usually self-limiting. Disc herniation causing sciatica should be managed conservatively initially with exercise, physiotherapy, and analgesia. Imaging is not recommended routinely unless red flags are present. Surgical referral should be considered if symptoms persist beyond 6-12 weeks of conservative treatment. Spinal injections are not recommended for sciatica.'),
+  ('https://medlineplus.gov/osteoporosis.html',
+   'MedlinePlus: Osteoporosis',
+   'REFERENCE', 0.85, NULL,
+   'Osteoporosis is a disease that weakens bones to the point where they break easily — most often bones in the hip, spine, and wrist. It is called a silent disease because you may not notice any changes until a bone breaks. Bone is living tissue that is constantly being broken down and replaced. Osteoporosis occurs when the creation of new bone does not keep up with the loss of old bone. Risk factors include age, female sex, low body weight, smoking, and family history.'),
+  ('https://pubmed.ncbi.nlm.nih.gov/32171377/',
+   'Management of Osteoarthritis: A Review',
+   'ABSTRACT', 0.80, NULL,
+   'BACKGROUND: Osteoarthritis is the most common form of arthritis, affecting millions worldwide. It occurs when the protective cartilage that cushions the ends of bones wears down over time. METHODS: Systematic review. RESULTS: Weight management and exercise are first-line treatments. Pharmacological options include paracetamol, NSAIDs, and intra-articular corticosteroid injections. Total joint replacement is effective for end-stage disease. CONCLUSION: A stepped-care approach optimises outcomes.'),
+  ('https://pubmed.ncbi.nlm.nih.gov/28402444/',
+   'Lumbar Disc Herniation: Current Concepts in Pathophysiology and Management',
+   'ABSTRACT', 0.80, NULL,
+   'Lumbar disc herniation is the most common cause of sciatica. The pathophysiology involves degeneration of the annulus fibrosus allowing herniation of the nucleus pulposus, which compresses adjacent nerve roots. The natural history is favourable, with most patients improving within 6-12 weeks. Conservative management including physiotherapy is first-line. Surgical discectomy should be considered for persistent radiculopathy beyond 6-12 weeks or progressive neurological deficit.')
+ON CONFLICT (url) DO NOTHING;
