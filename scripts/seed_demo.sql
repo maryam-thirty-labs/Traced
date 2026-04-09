@@ -960,3 +960,30 @@ INSERT INTO case_options (question_id,option_key,option_text,is_correct) SELECT 
 INSERT INTO case_options (question_id,option_key,option_text,is_correct) SELECT q.id,v.key,v.text,v.correct FROM case_questions q JOIN cases c ON c.id=q.case_id CROSS JOIN (VALUES ('A','ST elevation in leads II, III, aVF',false),('B','Absent P waves with irregular R-R intervals',true),('C','Delta waves with short PR interval',false),('D','Saw-tooth baseline pattern',false)) AS v(key,text,correct) WHERE c.case_id='MC_CARDIO_003' AND q.step_number=2 AND NOT EXISTS (SELECT 1 FROM case_options co WHERE co.question_id=q.id AND co.option_key=v.key);
 INSERT INTO case_options (question_id,option_key,option_text,is_correct) SELECT q.id,v.key,v.text,v.correct FROM case_questions q JOIN cases c ON c.id=q.case_id CROSS JOIN (VALUES ('A','Single macro re-entry circuit',false),('B','Multiple re-entry wavelets in the atria',true),('C','Enhanced automaticity of the AV node',false),('D','Accessory pathway conduction',false)) AS v(key,text,correct) WHERE c.case_id='MC_CARDIO_003' AND q.step_number=3 AND NOT EXISTS (SELECT 1 FROM case_options co WHERE co.question_id=q.id AND co.option_key=v.key);
 INSERT INTO case_options (question_id,option_key,option_text,is_correct) SELECT q.id,v.key,v.text,v.correct FROM case_questions q JOIN cases c ON c.id=q.case_id CROSS JOIN (VALUES ('A','Immediate cardioversion',false),('B','Stroke risk assessment and anticoagulation',true),('C','Ablation as first-line',false),('D','No treatment if asymptomatic',false)) AS v(key,text,correct) WHERE c.case_id='MC_CARDIO_003' AND q.step_number=4 AND NOT EXISTS (SELECT 1 FROM case_options co WHERE co.question_id=q.id AND co.option_key=v.key);
+
+-- ============================================================
+-- Sprint 7.8 — Cardiovascular evidence sources
+-- ============================================================
+
+INSERT INTO source_documents (url, title, source_type, trust_score, jurisdiction, raw_text) VALUES
+  ('https://www.nice.org.uk/guidance/ng185',
+   'NICE NG185: Acute coronary syndromes',
+   'GUIDELINE', 0.95, 'UK',
+   'Acute coronary syndromes include ST-elevation myocardial infarction (STEMI), non-ST-elevation myocardial infarction (NSTEMI), and unstable angina. STEMI requires immediate coronary reperfusion, ideally primary percutaneous coronary intervention (PCI) within 120 minutes. Dual antiplatelet therapy with aspirin and a P2Y12 inhibitor should be started immediately. High-sensitivity troponin is the biomarker of choice for diagnosis.'),
+  ('https://www.nice.org.uk/guidance/ng196',
+   'NICE NG196: Atrial fibrillation — diagnosis and management',
+   'GUIDELINE', 0.95, 'UK',
+   'Atrial fibrillation is the most common sustained cardiac arrhythmia. Stroke risk should be assessed using CHA2DS2-VASc score. Direct oral anticoagulants are preferred over warfarin for stroke prevention. Rate control with beta-blockers or calcium channel blockers is first-line for most patients. Rhythm control should be considered if symptoms persist despite rate control.'),
+  ('https://medlineplus.gov/heartattack.html',
+   'MedlinePlus: Heart Attack',
+   'REFERENCE', 0.85, NULL,
+   'A heart attack happens when blood flow to the heart is suddenly blocked, usually by a blood clot. Without blood, the heart muscle begins to die. Symptoms include chest pain or pressure, shortness of breath, pain in the arm, neck or jaw, and cold sweats. Quick treatment with medications and procedures to restore blood flow can save heart muscle and your life. Call emergency services immediately if you think you are having a heart attack.'),
+  ('https://pubmed.ncbi.nlm.nih.gov/33186487/',
+   'Aortic Stenosis: Pathophysiology, Diagnosis, and Management — A Review',
+   'ABSTRACT', 0.80, NULL,
+   'BACKGROUND: Aortic stenosis is the most common valvular heart disease in developed countries, predominantly caused by calcific degeneration in the elderly. METHODS: Narrative review. RESULTS: Echocardiography is the gold standard for diagnosis and severity grading. Symptomatic severe aortic stenosis has a poor prognosis without intervention. Surgical aortic valve replacement (SAVR) remains the standard for low-risk patients, while transcatheter aortic valve implantation (TAVI) is preferred for high-risk and elderly patients. CONCLUSION: Early identification and timely intervention improve survival.'),
+  ('https://pubmed.ncbi.nlm.nih.gov/31104429/',
+   'Mechanisms and Management of Atrial Fibrillation: A Comprehensive Review',
+   'ABSTRACT', 0.80, NULL,
+   'Atrial fibrillation results from complex interactions between triggers (often pulmonary vein ectopy) and a vulnerable atrial substrate (fibrosis, dilation). Multiple re-entry wavelets maintain the arrhythmia. Stroke prevention with anticoagulation is the cornerstone of management. Rate control is adequate for most patients. Catheter ablation targeting pulmonary vein isolation is increasingly used for symptomatic patients refractory to medical therapy.')
+ON CONFLICT (url) DO NOTHING;
