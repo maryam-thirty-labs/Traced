@@ -3,11 +3,17 @@ package dev.traced.core.cases.controller;
 import dev.traced.core.cases.dto.CaseDetailDto;
 import dev.traced.core.cases.dto.CaseSummaryDto;
 import dev.traced.core.cases.service.CaseService;
+import dev.traced.core.cases.service.CaseSubmissionService;
+import dev.traced.core.cases.service.CaseSubmissionService.AnswerDto;
+import dev.traced.core.cases.service.CaseSubmissionService.SubmissionResult;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/cases")
@@ -15,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 public class CaseController {
 
     private final CaseService caseService;
+    private final CaseSubmissionService caseSubmissionService;
 
     @GetMapping("/{caseId}")
     public ResponseEntity<CaseDetailDto> getCase(@PathVariable String caseId) {
@@ -24,5 +31,24 @@ public class CaseController {
     @GetMapping
     public ResponseEntity<Page<CaseSummaryDto>> listCases(Pageable pageable) {
         return ResponseEntity.ok(caseService.listCases(pageable));
+    }
+
+    @PostMapping("/{caseId}/submit")
+    public ResponseEntity<SubmissionResult> submitCase(
+        @PathVariable String caseId,
+        @RequestBody SubmitRequest request
+    ) {
+        List<AnswerDto> answers = request.answers().stream()
+            .map(a -> new AnswerDto(a.questionId(), a.selectedOptionKey()))
+            .toList();
+        SubmissionResult result = caseSubmissionService.submit(caseId, request.userProfileId(), answers);
+        return ResponseEntity.ok(result);
+    }
+
+    public record SubmitRequest(
+        UUID userProfileId,
+        List<AnswerInput> answers
+    ) {
+        public record AnswerInput(String questionId, String selectedOptionKey) {}
     }
 }
