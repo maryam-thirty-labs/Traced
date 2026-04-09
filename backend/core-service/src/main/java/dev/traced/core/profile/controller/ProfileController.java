@@ -5,6 +5,7 @@ import dev.traced.core.profile.dto.UserProfileDto;
 import dev.traced.core.profile.service.ProfileService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -17,16 +18,14 @@ public class ProfileController {
     private final ProfileService profileService;
 
     @GetMapping("/me")
-    public ResponseEntity<UserProfileDto> getProfile(
-        @RequestHeader("X-User-Id") UUID userId
-    ) {
+    public ResponseEntity<UserProfileDto> getProfile(Authentication auth) {
+        UUID userId = (UUID) auth.getPrincipal();
         return ResponseEntity.ok(profileService.getProfile(userId));
     }
 
     @GetMapping("/me/progress")
-    public ResponseEntity<ProgressDto> getProgress(
-        @RequestHeader("X-User-Id") UUID userId
-    ) {
+    public ResponseEntity<ProgressDto> getProgress(Authentication auth) {
+        UUID userId = (UUID) auth.getPrincipal();
         return ResponseEntity.ok(profileService.getProgress(userId));
     }
 }
