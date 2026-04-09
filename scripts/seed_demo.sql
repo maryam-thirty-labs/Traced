@@ -624,3 +624,34 @@ UPDATE candidate_claims SET status = 'APPROVED', reviewed_at = now()
 WHERE status = 'CANDIDATE'
   AND subject_canonical_id IN ('ANAT_GALLBLADDER_001', 'DIS_CHOLELITHIASIS_001', 'DIS_CHOLECYSTITIS_001', 'DIS_CHOLANGITIS_001')
   AND confidence >= 0.70;
+
+-- ============================================================
+-- Sprint 7.1 — Skeletal anatomy parts (8 parts)
+-- ============================================================
+
+INSERT INTO anatomy_parts (canonical_id, display_name, system_id, region, overview, status) VALUES
+  ('ANAT_FEMUR_001', 'Femur',
+    (SELECT id FROM body_systems WHERE canonical_id = 'SYS_SKELETAL_001'),
+    'Thigh', 'The longest and strongest bone in the body, extending from hip to knee.', 'ACTIVE'),
+  ('ANAT_HUMERUS_001', 'Humerus',
+    (SELECT id FROM body_systems WHERE canonical_id = 'SYS_SKELETAL_001'),
+    'Upper arm', 'The bone of the upper arm connecting the shoulder to the elbow.', 'ACTIVE'),
+  ('ANAT_CERVICAL_SPINE_001', 'Cervical Spine',
+    (SELECT id FROM body_systems WHERE canonical_id = 'SYS_SKELETAL_001'),
+    'Neck', 'The upper 7 vertebrae (C1–C7) supporting the head and protecting the spinal cord.', 'ACTIVE'),
+  ('ANAT_PELVIS_001', 'Pelvis',
+    (SELECT id FROM body_systems WHERE canonical_id = 'SYS_SKELETAL_001'),
+    'Pelvic girdle', 'A basin-shaped bony structure supporting the spine and protecting abdominal organs.', 'ACTIVE'),
+  ('ANAT_PATELLA_001', 'Patella',
+    (SELECT id FROM body_systems WHERE canonical_id = 'SYS_SKELETAL_001'),
+    'Knee', 'The kneecap — a sesamoid bone embedded in the quadriceps tendon that protects the knee joint.', 'ACTIVE'),
+  ('ANAT_TIBIA_001', 'Tibia',
+    (SELECT id FROM body_systems WHERE canonical_id = 'SYS_SKELETAL_001'),
+    'Lower leg', 'The shinbone, the larger of two bones in the lower leg, bearing most of the body weight.', 'ACTIVE'),
+  ('ANAT_RADIUS_001', 'Radius',
+    (SELECT id FROM body_systems WHERE canonical_id = 'SYS_SKELETAL_001'),
+    'Forearm', 'The lateral bone of the forearm, involved in wrist rotation and articulation.', 'ACTIVE'),
+  ('ANAT_LUMBAR_SPINE_001', 'Lumbar Spine',
+    (SELECT id FROM body_systems WHERE canonical_id = 'SYS_SKELETAL_001'),
+    'Lower back', 'The 5 lower vertebrae (L1–L5) bearing the most body weight and enabling trunk flexion.', 'ACTIVE')
+ON CONFLICT (canonical_id) DO NOTHING;
