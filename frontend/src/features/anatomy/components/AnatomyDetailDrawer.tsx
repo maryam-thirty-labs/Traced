@@ -5,8 +5,9 @@ import { X } from "lucide-react";
 import { getMockAnatomyPart } from "../lib/anatomyMocks";
 import { TabGroup } from "@/shared/ui/TabGroup";
 import { AnatomyDiseasesTab } from "./AnatomyDiseasesTab";
+import { AnatomyNamesTab } from "./AnatomyNamesTab";
 
-const TABS = ["Diseases"] as const;
+const TABS = ["Diseases", "Names"] as const;
 
 type AnatomyDetailDrawerProps = {
   canonicalId: string;
@@ -49,6 +50,7 @@ export function AnatomyDetailDrawer({
       <TabGroup tabs={[...TABS]} activeTab={activeTab} onTabChange={setActiveTab} />
 
       {activeTab === "Diseases" && <AnatomyDiseasesTab diseases={part.diseases} />}
+      {activeTab === "Names" && <AnatomyNamesTab aliases={part.aliases} />}
     </aside>
   );
 }
