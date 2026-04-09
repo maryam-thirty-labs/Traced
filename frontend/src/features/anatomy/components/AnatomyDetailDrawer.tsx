@@ -6,8 +6,9 @@ import { getMockAnatomyPart } from "../lib/anatomyMocks";
 import { TabGroup } from "@/shared/ui/TabGroup";
 import { AnatomyDiseasesTab } from "./AnatomyDiseasesTab";
 import { AnatomyNamesTab } from "./AnatomyNamesTab";
+import { AnatomyMechanismsTab } from "./AnatomyMechanismsTab";
 
-const TABS = ["Diseases", "Names"] as const;
+const TABS = ["Diseases", "Names", "Mechanisms"] as const;
 
 type AnatomyDetailDrawerProps = {
   canonicalId: string;
@@ -51,6 +52,7 @@ export function AnatomyDetailDrawer({
 
       {activeTab === "Diseases" && <AnatomyDiseasesTab diseases={part.diseases} />}
       {activeTab === "Names" && <AnatomyNamesTab aliases={part.aliases} />}
+      {activeTab === "Mechanisms" && <AnatomyMechanismsTab mechanisms={part.mechanisms} />}
     </aside>
   );
 }
