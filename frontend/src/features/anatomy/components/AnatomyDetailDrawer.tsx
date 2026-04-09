@@ -1,7 +1,12 @@
 "use client";
 
+import { useState } from "react";
 import { X } from "lucide-react";
 import { getMockAnatomyPart } from "../lib/anatomyMocks";
+import { TabGroup } from "@/shared/ui/TabGroup";
+import { AnatomyDiseasesTab } from "./AnatomyDiseasesTab";
+
+const TABS = ["Diseases"] as const;
 
 type AnatomyDetailDrawerProps = {
   canonicalId: string;
@@ -12,6 +17,7 @@ export function AnatomyDetailDrawer({
   canonicalId,
   onClose,
 }: AnatomyDetailDrawerProps) {
+  const [activeTab, setActiveTab] = useState<string>(TABS[0]);
   const part = getMockAnatomyPart(canonicalId);
 
   if (!part) return null;
@@ -39,6 +45,10 @@ export function AnatomyDetailDrawer({
       <div className="px-4 py-3">
         <p className="text-sm leading-relaxed text-text-secondary">{part.overview}</p>
       </div>
+
+      <TabGroup tabs={[...TABS]} activeTab={activeTab} onTabChange={setActiveTab} />
+
+      {activeTab === "Diseases" && <AnatomyDiseasesTab diseases={part.diseases} />}
     </aside>
   );
 }
