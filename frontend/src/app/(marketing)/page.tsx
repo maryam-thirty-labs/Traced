@@ -104,6 +104,22 @@ export default function LandingPage() {
           ))}
         </div>
       </section>
+
+      {/* Footer */}
+      <footer className="border-t border-border-subtle px-6 py-10 mt-8">
+        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="text-center sm:text-left">
+            <span className="text-sm font-bold text-accent-text">Traced</span>
+            <p className="text-xs text-text-muted mt-1">Anatomy-first medical learning</p>
+          </div>
+          <div className="flex gap-6">
+            <Link href="/register" className="text-xs text-text-secondary hover:text-text-primary">Get started</Link>
+            <Link href="/login" className="text-xs text-text-secondary hover:text-text-primary">Sign in</Link>
+            <Link href="/explorer" className="text-xs text-text-secondary hover:text-text-primary">Explorer</Link>
+            <Link href="/cases" className="text-xs text-text-secondary hover:text-text-primary">Cases</Link>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
