@@ -542,3 +542,23 @@ INSERT INTO source_documents (url, title, source_type, trust_score, jurisdiction
    'GUIDELINE', 0.95, 'UK',
    'Acute cholangitis is a bacterial infection of the biliary system caused by obstruction. Charcot''s triad (fever, jaundice, right upper quadrant pain) is the classic presentation. Reynolds'' pentad adds hypotension and confusion. IV antibiotics should be started immediately. Biliary drainage via ERCP is the definitive treatment for acute cholangitis with biliary obstruction.')
 ON CONFLICT (url) DO NOTHING;
+
+-- ============================================================
+-- Sprint 4C.2 — MedlinePlus hepatobiliary source documents
+-- One per disease: cholelithiasis, cholecystitis, cholangitis
+-- ============================================================
+
+INSERT INTO source_documents (url, title, source_type, trust_score, jurisdiction, raw_text) VALUES
+  ('https://medlineplus.gov/gallstones.html',
+   'MedlinePlus: Gallstones',
+   'REFERENCE', 0.85, NULL,
+   'Gallstones are hard, pebble-like pieces of material that form in the gallbladder. They are made of cholesterol or bilirubin. Gallstones can range in size from a grain of sand to a golf ball. The gallbladder can develop a single large stone, hundreds of tiny stones, or both. If gallstones block a bile duct, bile can build up in the gallbladder, causing a gallbladder attack. The pain usually lasts from 1 to several hours. Surgery to remove the gallbladder is the most common treatment.'),
+  ('https://medlineplus.gov/cholecystitis.html',
+   'MedlinePlus: Cholecystitis',
+   'REFERENCE', 0.85, NULL,
+   'Cholecystitis is inflammation of the gallbladder. It usually happens when a gallstone blocks the cystic duct. This leads to a build-up of bile that causes inflammation. Acute cholecystitis causes sudden, severe pain in the upper right abdomen, fever, and nausea. Treatment usually involves hospital stay, IV antibiotics, and cholecystectomy. Without treatment, cholecystitis can lead to serious complications including perforation and peritonitis.'),
+  ('https://medlineplus.gov/bileductdiseases.html',
+   'MedlinePlus: Bile Duct Diseases',
+   'REFERENCE', 0.85, NULL,
+   'Bile ducts carry bile from the liver and gallbladder to the small intestine. Cholangitis is an infection of the bile ducts, usually caused by bacteria ascending from the small intestine into bile ducts obstructed by gallstones. Symptoms include fever, jaundice, and abdominal pain (Charcot''s triad). Severe cases may present with confusion and hypotension. Urgent treatment includes antibiotics and biliary drainage, typically via ERCP.')
+ON CONFLICT (url) DO NOTHING;
