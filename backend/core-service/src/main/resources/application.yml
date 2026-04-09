@@ -3,7 +3,7 @@ spring:
     name: traced-core
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/traced
+    url: jdbc:postgresql://localhost:5434/traced
     username: postgres
     password: postgres
     driver-class-name: org.postgresql.Driver
@@ -23,7 +23,7 @@ spring:
   data:
     redis:
       host: localhost
-      port: 6379
+      port: 6380
 
 management:
   endpoints:

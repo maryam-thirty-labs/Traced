@@ -7,7 +7,7 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: traced
     ports:
-      - "5432:5432"
+      - "5434:5432"
     volumes:
       - traced-pgdata:/var/lib/postgresql/data
 
@@ -15,7 +15,7 @@ services:
     image: redis:7
     container_name: traced-redis
     ports:
-      - "6379:6379"
+      - "6380:6379"
 
 volumes:
   traced-pgdata:
