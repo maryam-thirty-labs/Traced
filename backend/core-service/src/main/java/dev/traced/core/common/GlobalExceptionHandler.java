@@ -1,5 +1,6 @@
 package dev.traced.core.common;
 
+import dev.traced.core.cases.exception.CaseTitleViolationException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,6 +29,16 @@ public class GlobalExceptionHandler {
             "status", 409,
             "error", "Conflict",
             "message", "Data integrity violation",
+            "timestamp", Instant.now().toString()
+        ));
+    }
+
+    @ExceptionHandler(CaseTitleViolationException.class)
+    public ResponseEntity<Map<String, Object>> handleTitleViolation(CaseTitleViolationException ex) {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(Map.of(
+            "status", 422,
+            "error", "Unprocessable Entity",
+            "message", ex.getMessage(),
             "timestamp", Instant.now().toString()
         ));
     }
