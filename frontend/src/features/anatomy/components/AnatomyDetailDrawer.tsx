@@ -1,9 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { X } from "lucide-react";
-import { getMockAnatomyPart } from "../lib/anatomyMocks";
+import { getAnatomyPart } from "../lib/anatomyApi";
+import type { AnatomyPartDto } from "../types/anatomy.types";
 import { TabGroup } from "@/shared/ui/TabGroup";
+import { SkeletonLoader } from "@/shared/ui/SkeletonLoader";
+import { ErrorState } from "@/shared/ui/ErrorState";
 import { AnatomyDiseasesTab } from "./AnatomyDiseasesTab";
 import { AnatomyNamesTab } from "./AnatomyNamesTab";
 import { AnatomyMechanismsTab } from "./AnatomyMechanismsTab";
@@ -21,9 +24,27 @@ export function AnatomyDetailDrawer({
   onClose,
 }: AnatomyDetailDrawerProps) {
   const [activeTab, setActiveTab] = useState<string>(TABS[0]);
-  const part = getMockAnatomyPart(canonicalId);
+  const [part, setPart] = useState<AnatomyPartDto | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
-  if (!part) return null;
+  const fetchData = useCallback(() => {
+    setLoading(true);
+    setError(false);
+    getAnatomyPart(canonicalId)
+      .then((data) => {
+        setPart(data);
+        setLoading(false);
+      })
+      .catch(() => {
+        setError(true);
+        setLoading(false);
+      });
+  }, [canonicalId]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   return (
     <aside
@@ -32,9 +53,15 @@ export function AnatomyDetailDrawer({
     >
       <div className="flex items-center justify-between px-4 py-3 border-b border-border-subtle">
         <div className="flex flex-col gap-0.5">
-          <span className="text-xs text-text-muted">{part.system} / {part.region}</span>
-          <h2 className="text-base font-semibold text-text-primary">{part.displayName}</h2>
-          <span className="text-xs font-mono text-text-ghost">{part.canonicalId}</span>
+          {part ? (
+            <>
+              <span className="text-xs text-text-muted">{part.system} / {part.region}</span>
+              <h2 className="text-base font-semibold text-text-primary">{part.displayName}</h2>
+              <span className="text-xs font-mono text-text-ghost">{part.canonicalId}</span>
+            </>
+          ) : (
+            <span className="text-xs font-mono text-text-ghost">{canonicalId}</span>
+          )}
         </div>
         <button
           onClick={onClose}
@@ -45,16 +72,23 @@ export function AnatomyDetailDrawer({
         </button>
       </div>
 
-      <div className="px-4 py-3">
-        <p className="text-sm leading-relaxed text-text-secondary">{part.overview}</p>
-      </div>
+      {loading && <SkeletonLoader />}
+      {error && <ErrorState onRetry={fetchData} />}
 
-      <TabGroup tabs={[...TABS]} activeTab={activeTab} onTabChange={setActiveTab} />
+      {part && !loading && !error && (
+        <>
+          <div className="px-4 py-3">
+            <p className="text-sm leading-relaxed text-text-secondary">{part.overview}</p>
+          </div>
 
-      {activeTab === "Diseases" && <AnatomyDiseasesTab diseases={part.diseases} />}
-      {activeTab === "Names" && <AnatomyNamesTab aliases={part.aliases} />}
-      {activeTab === "Mechanisms" && <AnatomyMechanismsTab mechanisms={part.mechanisms} />}
-      {activeTab === "Cases" && <AnatomyCasesTab cases={part.cases} />}
+          <TabGroup tabs={[...TABS]} activeTab={activeTab} onTabChange={setActiveTab} />
+
+          {activeTab === "Diseases" && <AnatomyDiseasesTab diseases={part.diseases} />}
+          {activeTab === "Names" && <AnatomyNamesTab aliases={part.aliases} />}
+          {activeTab === "Mechanisms" && <AnatomyMechanismsTab mechanisms={part.mechanisms} />}
+          {activeTab === "Cases" && <AnatomyCasesTab cases={part.cases} />}
+        </>
+      )}
     </aside>
   );
 }
