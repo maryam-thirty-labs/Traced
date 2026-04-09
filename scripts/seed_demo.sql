@@ -562,3 +562,22 @@ INSERT INTO source_documents (url, title, source_type, trust_score, jurisdiction
    'REFERENCE', 0.85, NULL,
    'Bile ducts carry bile from the liver and gallbladder to the small intestine. Cholangitis is an infection of the bile ducts, usually caused by bacteria ascending from the small intestine into bile ducts obstructed by gallstones. Symptoms include fever, jaundice, and abdominal pain (Charcot''s triad). Severe cases may present with confusion and hypotension. Urgent treatment includes antibiotics and biliary drainage, typically via ERCP.')
 ON CONFLICT (url) DO NOTHING;
+
+-- ============================================================
+-- Sprint 4C.3 — PubMed review abstract source documents
+-- ============================================================
+
+INSERT INTO source_documents (url, title, source_type, trust_score, jurisdiction, raw_text) VALUES
+  ('https://pubmed.ncbi.nlm.nih.gov/31583121/',
+   'Gallstone Disease: Diagnosis and Management of Cholelithiasis, Cholecystitis and Choledocholithiasis',
+   'ABSTRACT', 0.80, NULL,
+   'BACKGROUND: Gallstone disease is one of the most common gastrointestinal conditions requiring hospitalisation. Cholesterol gallstones account for approximately 80% of cases in Western populations, resulting from supersaturation of bile with cholesterol. METHODS: Systematic review of randomised controlled trials and observational studies. RESULTS: Laparoscopic cholecystectomy remains the gold standard for symptomatic gallstones. Early cholecystectomy within 72 hours of presentation for acute cholecystitis reduces total hospital stay and complication rates. Ursodeoxycholic acid dissolution therapy is an option for patients unfit for surgery with small, radiolucent stones. CONCLUSION: A structured diagnostic and management pathway improves outcomes.'),
+  ('https://pubmed.ncbi.nlm.nih.gov/29791643/',
+   'Pathogenesis of Gallstones: A Review',
+   'ABSTRACT', 0.80, NULL,
+   'Gallstone formation is a multifactorial process. Cholesterol gallstones arise from hepatic hypersecretion of cholesterol, gallbladder hypomotility, and accelerated cholesterol crystal nucleation. Bile supersaturation with cholesterol is the primary prerequisite. Gallbladder stasis allows time for nucleation and stone growth. Mucin glycoprotein secretion by the gallbladder epithelium acts as a pronucleating agent. Pigment stones are associated with chronic haemolysis and biliary infection. Understanding the pathogenesis guides both prevention and treatment strategies.'),
+  ('https://pubmed.ncbi.nlm.nih.gov/30243327/',
+   'Acute Cholangitis: Causes, Diagnosis, and Management',
+   'ABSTRACT', 0.80, NULL,
+   'Acute cholangitis results from bacterial infection of an obstructed biliary system. The most common cause is choledocholithiasis. Charcot''s triad of fever, jaundice, and right upper quadrant pain is present in 50-70% of cases. Reynolds'' pentad, adding hypotension and altered mental status, indicates severe disease requiring urgent intervention. Initial management includes IV fluid resuscitation and broad-spectrum antibiotics. Biliary drainage via ERCP is the standard of care for decompression. Mortality in severe cholangitis without drainage exceeds 50%.')
+ON CONFLICT (url) DO NOTHING;
