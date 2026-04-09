@@ -120,3 +120,18 @@ WHERE d.canonical_id = 'DIS_CHOLECYSTITIS_001'
     SELECT 1 FROM disease_aliases a
     WHERE a.disease_id = d.id AND a.alias = v.alias
   );
+
+-- ============================================================
+-- Sprint 2C.4 — Mechanism seed (7 mechanisms)
+-- Idempotent: ON CONFLICT DO NOTHING
+-- ============================================================
+
+INSERT INTO mechanisms (canonical_id, name, description, status) VALUES
+  ('MECH_BILE_SUPERSATURATION_001',   'Bile supersaturation',       'Excess cholesterol or reduced bile salts cause crystallisation in gallbladder bile.', 'ACTIVE'),
+  ('MECH_GALLBLADDER_HYPOMOTILITY_001','Gallbladder hypomotility',  'Reduced gallbladder contraction leads to bile stasis and stone nucleation.',         'ACTIVE'),
+  ('MECH_CYSTIC_DUCT_OBSTRUCTION_001','Cystic duct obstruction',   'A gallstone lodges in the cystic duct, blocking bile outflow and triggering inflammation.', 'ACTIVE'),
+  ('MECH_BILE_DUCT_OBSTRUCTION_001',  'Bile duct obstruction',     'A stone migrates into the common bile duct, causing upstream pressure and jaundice.', 'ACTIVE'),
+  ('MECH_BACTERIAL_ASCENT_001',       'Bacterial ascent',          'Bacteria ascend from the duodenum into an obstructed bile duct, causing infection.', 'ACTIVE'),
+  ('MECH_MUCOSAL_INFLAMMATION_001',   'Mucosal inflammation',      'Trapped bile acids damage the gallbladder mucosa, triggering an inflammatory cascade.', 'ACTIVE'),
+  ('MECH_PROSTAGLANDIN_RELEASE_001',  'Prostaglandin release',     'Mucosal injury triggers prostaglandin synthesis, increasing fluid secretion and wall distension.', 'ACTIVE')
+ON CONFLICT (canonical_id) DO NOTHING;
