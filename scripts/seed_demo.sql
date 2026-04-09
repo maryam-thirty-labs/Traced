@@ -75,3 +75,48 @@ WHERE ap.canonical_id = 'ANAT_LIVER_001'
     SELECT 1 FROM anatomy_synonyms s
     WHERE s.anatomy_part_id = ap.id AND s.synonym = v.synonym
   );
+
+-- ============================================================
+-- Sprint 2C.3 — Hepatobiliary disease seed + aliases
+-- 3 diseases with etymology, 2 aliases for cholelithiasis
+-- Idempotent: ON CONFLICT DO NOTHING
+-- ============================================================
+
+INSERT INTO diseases (canonical_id, name, etymology_json, commonness, category, status) VALUES
+  ('DIS_CHOLELITHIASIS_001', 'Cholelithiasis',
+    '[{"part":"chole-","meaning":"bile"},{"part":"-lith-","meaning":"stone"},{"part":"-iasis","meaning":"condition"}]',
+    'VERY_COMMON', 'Hepatobiliary', 'ACTIVE'),
+  ('DIS_CHOLECYSTITIS_001', 'Cholecystitis',
+    '[{"part":"chole-","meaning":"bile"},{"part":"-cyst-","meaning":"bladder"},{"part":"-itis","meaning":"inflammation"}]',
+    'COMMON', 'Hepatobiliary', 'ACTIVE'),
+  ('DIS_CHOLANGITIS_001', 'Cholangitis',
+    '[{"part":"chol-","meaning":"bile"},{"part":"-angi-","meaning":"vessel"},{"part":"-itis","meaning":"inflammation"}]',
+    'LESS_COMMON', 'Hepatobiliary', 'ACTIVE')
+ON CONFLICT (canonical_id) DO NOTHING;
+
+-- Cholelithiasis aliases
+INSERT INTO disease_aliases (disease_id, alias, alias_type)
+SELECT d.id, v.alias, v.alias_type
+FROM diseases d
+CROSS JOIN (VALUES
+  ('Gallstones', 'LAYPERSON'),
+  ('Biliary calculi', 'SYNONYM')
+) AS v(alias, alias_type)
+WHERE d.canonical_id = 'DIS_CHOLELITHIASIS_001'
+  AND NOT EXISTS (
+    SELECT 1 FROM disease_aliases a
+    WHERE a.disease_id = d.id AND a.alias = v.alias
+  );
+
+-- Cholecystitis alias
+INSERT INTO disease_aliases (disease_id, alias, alias_type)
+SELECT d.id, v.alias, v.alias_type
+FROM diseases d
+CROSS JOIN (VALUES
+  ('Gallbladder inflammation', 'LAYPERSON')
+) AS v(alias, alias_type)
+WHERE d.canonical_id = 'DIS_CHOLECYSTITIS_001'
+  AND NOT EXISTS (
+    SELECT 1 FROM disease_aliases a
+    WHERE a.disease_id = d.id AND a.alias = v.alias
+  );
