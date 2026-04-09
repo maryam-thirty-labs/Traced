@@ -819,3 +819,28 @@ INSERT INTO source_documents (url, title, source_type, trust_score, jurisdiction
    'ABSTRACT', 0.80, NULL,
    'Lumbar disc herniation is the most common cause of sciatica. The pathophysiology involves degeneration of the annulus fibrosus allowing herniation of the nucleus pulposus, which compresses adjacent nerve roots. The natural history is favourable, with most patients improving within 6-12 weeks. Conservative management including physiotherapy is first-line. Surgical discectomy should be considered for persistent radiculopathy beyond 6-12 weeks or progressive neurological deficit.')
 ON CONFLICT (url) DO NOTHING;
+
+-- ============================================================
+-- Sprint 7.5 — Cardiovascular anatomy parts (6 parts)
+-- ============================================================
+
+INSERT INTO anatomy_parts (canonical_id, display_name, system_id, region, overview, status) VALUES
+  ('ANAT_HEART_001', 'Heart',
+    (SELECT id FROM body_systems WHERE canonical_id = 'SYS_CARDIOVASCULAR_001'),
+    'Mediastinum', 'A muscular pump with four chambers that drives systemic and pulmonary circulation.', 'ACTIVE'),
+  ('ANAT_CORONARY_ARTERY_001', 'Coronary Arteries',
+    (SELECT id FROM body_systems WHERE canonical_id = 'SYS_CARDIOVASCULAR_001'),
+    'Epicardium', 'The arteries supplying oxygenated blood to the myocardium — left anterior descending, circumflex, and right coronary.', 'ACTIVE'),
+  ('ANAT_AORTA_001', 'Aorta',
+    (SELECT id FROM body_systems WHERE canonical_id = 'SYS_CARDIOVASCULAR_001'),
+    'Mediastinum / Retroperitoneum', 'The largest artery in the body, carrying oxygenated blood from the left ventricle to the systemic circulation.', 'ACTIVE'),
+  ('ANAT_MITRAL_VALVE_001', 'Mitral Valve',
+    (SELECT id FROM body_systems WHERE canonical_id = 'SYS_CARDIOVASCULAR_001'),
+    'Left heart', 'The bicuspid valve between the left atrium and left ventricle preventing backflow during systole.', 'ACTIVE'),
+  ('ANAT_AORTIC_VALVE_001', 'Aortic Valve',
+    (SELECT id FROM body_systems WHERE canonical_id = 'SYS_CARDIOVASCULAR_001'),
+    'Left heart', 'The tricuspid semilunar valve between the left ventricle and aorta preventing diastolic regurgitation.', 'ACTIVE'),
+  ('ANAT_PERICARDIUM_001', 'Pericardium',
+    (SELECT id FROM body_systems WHERE canonical_id = 'SYS_CARDIOVASCULAR_001'),
+    'Mediastinum', 'The double-layered fibroserous sac enclosing the heart, providing protection and reducing friction.', 'ACTIVE')
+ON CONFLICT (canonical_id) DO NOTHING;
