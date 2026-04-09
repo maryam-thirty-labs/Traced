@@ -11,8 +11,9 @@ import { AnatomyDiseasesTab } from "./AnatomyDiseasesTab";
 import { AnatomyNamesTab } from "./AnatomyNamesTab";
 import { AnatomyMechanismsTab } from "./AnatomyMechanismsTab";
 import { AnatomyCasesTab } from "./AnatomyCasesTab";
+import { AnatomyExplainTab } from "./AnatomyExplainTab";
 
-const TABS = ["Diseases", "Names", "Mechanisms", "Cases"] as const;
+const TABS = ["Diseases", "Names", "Mechanisms", "Cases", "Explain"] as const;
 
 type AnatomyDetailDrawerProps = {
   canonicalId: string;
@@ -87,6 +88,7 @@ export function AnatomyDetailDrawer({
           {activeTab === "Names" && <AnatomyNamesTab aliases={part.aliases} />}
           {activeTab === "Mechanisms" && <AnatomyMechanismsTab mechanisms={part.mechanisms} />}
           {activeTab === "Cases" && <AnatomyCasesTab cases={part.cases} />}
+          {activeTab === "Explain" && <AnatomyExplainTab canonicalId={canonicalId} />}
         </>
       )}
     </aside>
