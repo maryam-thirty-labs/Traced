@@ -97,13 +97,13 @@ export default function ProgressPage() {
               >
                 <div className="flex flex-col gap-0.5">
                   <span className="text-sm text-text-primary">{a.caseTitle}</span>
-                  <span className="text-[10px] text-text-muted">{a.score}%</span>
+                  <span className="text-[10px] font-mono text-text-muted">{a.score}%</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className={`text-xs font-medium ${a.outcome === "CORRECT" ? "text-green-400" : "text-red-400"}`}>
                     {a.outcome}
                   </span>
-                  <span className="text-[10px] text-accent-text">+{a.xpAwarded} XP</span>
+                  <span className="text-[10px] font-mono text-accent-text">+{a.xpAwarded} XP</span>
                 </div>
               </div>
             ))}

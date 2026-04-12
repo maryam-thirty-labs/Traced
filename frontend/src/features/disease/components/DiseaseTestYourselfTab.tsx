@@ -74,7 +74,7 @@ export function DiseaseTestYourselfTab({ diseaseCanonicalId }: { diseaseCanonica
                 >
                   {c.difficulty}
                 </span>
-                <span className="text-[10px] text-accent-text">+{c.xpReward} XP</span>
+                <span className="text-[10px] font-mono text-accent-text">+{c.xpReward} XP</span>
               </div>
             </div>
           </Link>

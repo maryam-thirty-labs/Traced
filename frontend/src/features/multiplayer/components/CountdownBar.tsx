@@ -26,7 +26,7 @@ export function CountdownBar({ durationSeconds, onExpire }: CountdownBarProps) {
     <div className="w-full space-y-1">
       <div className="flex justify-between text-[10px] text-text-muted">
         <span>Time remaining</span>
-        <span>{remaining}s</span>
+        <span className="font-mono">{remaining}s</span>
       </div>
       <div className="w-full h-1.5 rounded-full bg-surface-elevated overflow-hidden">
         <div

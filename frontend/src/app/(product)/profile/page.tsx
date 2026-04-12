@@ -72,7 +72,7 @@ export default function ProfilePage() {
         <div>
           <h1 className="text-lg font-semibold text-text-primary">{profile.displayName}</h1>
           <div className="flex items-center gap-2 mt-1">
-            <span className="text-xs font-medium px-2 py-0.5 rounded bg-accent-muted text-accent-text">
+            <span className="text-xs font-mono font-medium px-2 py-0.5 rounded bg-accent-muted text-accent-text">
               Lv {profile.currentLevel}
             </span>
             <span className="text-xs text-text-secondary">{profile.levelTitle}</span>
@@ -83,15 +83,15 @@ export default function ProfilePage() {
       {/* Stats strip */}
       <div className="grid grid-cols-3 gap-3">
         <div className="flex flex-col items-center rounded-lg border border-border-subtle bg-surface-card p-3">
-          <span className="text-lg font-bold text-accent-text">{profile.totalXp}</span>
+          <span className="text-lg font-mono font-bold text-accent-text">{profile.totalXp}</span>
           <span className="text-[10px] text-text-muted">Total XP</span>
         </div>
         <div className="flex flex-col items-center rounded-lg border border-border-subtle bg-surface-card p-3">
-          <span className="text-lg font-bold text-text-primary">{profile.currentStreak}</span>
+          <span className="text-lg font-mono font-bold text-text-primary">{profile.currentStreak}</span>
           <span className="text-[10px] text-text-muted">Day Streak</span>
         </div>
         <div className="flex flex-col items-center rounded-lg border border-border-subtle bg-surface-card p-3">
-          <span className="text-lg font-bold text-text-primary">{profile.unlockedSystems.length}</span>
+          <span className="text-lg font-mono font-bold text-text-primary">{profile.unlockedSystems.length}</span>
           <span className="text-[10px] text-text-muted">Systems Unlocked</span>
         </div>
       </div>

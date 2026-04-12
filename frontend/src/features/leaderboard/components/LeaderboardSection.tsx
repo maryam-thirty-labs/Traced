@@ -33,13 +33,19 @@ function EntryRow({ entry }: { entry: LeaderboardEntry }) {
             {entry.isMe && <span className="text-[10px] ml-1.5 text-text-muted">you</span>}
           </span>
           <span className="text-[10px] text-text-muted">
-            Lv {entry.currentLevel}
-            {entry.currentStreak > 0 && ` \u00b7 ${entry.currentStreak}\u{1F525}`}
+            <span className="font-mono">Lv {entry.currentLevel}</span>
+            {entry.currentStreak > 0 && (
+              <>
+                {` \u00b7 `}
+                <span className="font-mono">{entry.currentStreak}</span>
+                {`\u{1F525}`}
+              </>
+            )}
             {entry.university && ` \u00b7 ${entry.university}`}
           </span>
         </div>
       </div>
-      <span className="text-sm font-semibold text-accent-text shrink-0">
+      <span className="text-sm font-mono font-semibold text-accent-text shrink-0">
         {entry.xp} XP
       </span>
     </div>
