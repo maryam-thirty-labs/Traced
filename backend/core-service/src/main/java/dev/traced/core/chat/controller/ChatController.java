@@ -137,7 +137,25 @@ public class ChatController {
         ));
     }
 
-    // --- user flag (sprint 10.6 wire-through lives here too) ---
+    // --- direct message fetch: REMOVED returns 404 ---
+
+    @GetMapping("/messages/{messageId}")
+    public ResponseEntity<ChatMessageDto> getMessage(@PathVariable UUID messageId) {
+        ChatMessage m = messageService.findById(messageId);
+        if ("REMOVED".equals(m.getStatus())) {
+            throw new EntityNotFoundException("ChatMessage", messageId.toString());
+        }
+        return ResponseEntity.ok(ChatMessageDto.builder()
+            .messageId(m.getId().toString())
+            .channelId(m.getChannel().getChannelId())
+            .authorDisplayName(m.getAuthorProfile().getDisplayName())
+            .messageText(m.getMessageText())
+            .sentAt(m.getSentAt())
+            .reactionCounts(Map.of())
+            .build());
+    }
+
+    // --- user flag ---
 
     @PostMapping("/messages/{messageId}/flag")
     public ResponseEntity<Map<String, String>> flagMessage(
