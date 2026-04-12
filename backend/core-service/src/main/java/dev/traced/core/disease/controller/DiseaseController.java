@@ -1,6 +1,7 @@
 package dev.traced.core.disease.controller;
 
 import dev.traced.core.disease.dto.DiseaseDetailDto;
+import dev.traced.core.disease.dto.DiseaseInvestigationDto;
 import dev.traced.core.disease.dto.DiseaseSymptomDto;
 import dev.traced.core.disease.service.DiseaseService;
 import dev.traced.core.treatment.dto.TreatmentWithRoleDto;
@@ -40,5 +41,13 @@ public class DiseaseController {
     ) {
         var symptoms = diseaseService.findSymptoms(canonicalId);
         return ResponseEntity.ok(symptoms.stream().map(DiseaseSymptomDto::from).toList());
+    }
+
+    @GetMapping("/{canonicalId}/investigations")
+    public ResponseEntity<List<DiseaseInvestigationDto>> getDiseaseInvestigations(
+        @PathVariable String canonicalId
+    ) {
+        var items = diseaseService.findInvestigations(canonicalId);
+        return ResponseEntity.ok(items.stream().map(DiseaseInvestigationDto::from).toList());
     }
 }
