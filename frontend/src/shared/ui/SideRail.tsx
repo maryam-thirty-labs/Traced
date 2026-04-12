@@ -36,7 +36,7 @@ export function SideRail() {
               aria-label={label}
               className={`flex items-center justify-center w-9 h-9 rounded-lg transition-colors ${
                 isActive
-                  ? "bg-accent-muted text-accent-text"
+                  ? "bg-accent-muted text-accent-text glow-purple"
                   : "text-text-muted hover:text-text-secondary"
               }`}
             >

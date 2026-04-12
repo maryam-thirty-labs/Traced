@@ -19,7 +19,7 @@ export function TabGroup({ tabs, activeTab, onTabChange }: TabGroupProps) {
             onClick={() => onTabChange(tab)}
             className={`px-3 py-2 text-sm font-medium transition-colors ${
               isActive
-                ? "text-accent-text border-b-2 border-accent"
+                ? "text-accent-text border-b-2 border-accent glow-purple"
                 : "text-text-muted hover:text-text-secondary"
             }`}
           >

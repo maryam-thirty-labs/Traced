@@ -5,12 +5,12 @@ import { Lock } from "lucide-react";
 import type { CaseBrowseItem } from "../types/caseBrowse.types";
 
 const DIFFICULTY_COLORS: Record<string, string> = {
-  EASY: "text-green-400 bg-green-400/10",
-  MEDIUM: "text-amber-400 bg-amber-400/10",
-  HARD: "text-red-400 bg-red-400/10",
-  easy: "text-green-400 bg-green-400/10",
-  medium: "text-amber-400 bg-amber-400/10",
-  hard: "text-red-400 bg-red-400/10",
+  EASY: "text-green-400 bg-green-400/10 glow-green",
+  MEDIUM: "text-amber-400 bg-amber-400/10 glow-amber",
+  HARD: "text-red-400 bg-red-400/10 glow-red",
+  easy: "text-green-400 bg-green-400/10 glow-green",
+  medium: "text-amber-400 bg-amber-400/10 glow-amber",
+  hard: "text-red-400 bg-red-400/10 glow-red",
 };
 
 type CaseCardProps = {

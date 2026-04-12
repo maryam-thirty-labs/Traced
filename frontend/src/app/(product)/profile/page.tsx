@@ -72,7 +72,7 @@ export default function ProfilePage() {
         <div>
           <h1 className="text-lg font-semibold text-text-primary">{profile.displayName}</h1>
           <div className="flex items-center gap-2 mt-1">
-            <span className="text-xs font-mono font-medium px-2 py-0.5 rounded bg-accent-muted text-accent-text">
+            <span className="text-xs font-mono font-medium px-2 py-0.5 rounded bg-accent-muted text-accent-text glow-purple">
               Lv {profile.currentLevel}
             </span>
             <span className="text-xs text-text-secondary">{profile.levelTitle}</span>

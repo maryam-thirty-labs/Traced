@@ -85,7 +85,7 @@ export function CaseResult({ result, caseTitle, previousLevel }: CaseResultProps
           <span className="text-xs text-text-muted">Score</span>
           <span className="text-lg font-mono font-bold text-text-primary">{result.score}%</span>
         </div>
-        <div className="flex flex-col items-center gap-1 rounded-lg border border-border-subtle bg-surface-card p-3">
+        <div className="flex flex-col items-center gap-1 rounded-lg border border-accent-border bg-surface-card p-3 glow-purple">
           <span className="text-xs text-text-muted">XP Earned</span>
           <span className="text-lg font-mono font-bold text-accent-text">+{animatedXp}</span>
         </div>

@@ -15,9 +15,9 @@ type CaseSummary = {
 };
 
 const DIFFICULTY_STYLES: Record<string, string> = {
-  EASY: "text-green-400 bg-green-400/10 border-green-400/30",
-  MEDIUM: "text-amber-400 bg-amber-400/10 border-amber-400/30",
-  HARD: "text-red-400 bg-red-400/10 border-red-400/30",
+  EASY: "text-green-400 bg-green-400/10 border-green-400/30 glow-green",
+  MEDIUM: "text-amber-400 bg-amber-400/10 border-amber-400/30 glow-amber",
+  HARD: "text-red-400 bg-red-400/10 border-red-400/30 glow-red",
 };
 
 export function DiseaseTestYourselfTab({ diseaseCanonicalId }: { diseaseCanonicalId: string }) {
