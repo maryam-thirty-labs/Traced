@@ -1,6 +1,6 @@
 # Traced
 
-An anatomy-first medical learning platform that connects body structures to disease, mechanism, and treatment — then makes learners prove their understanding through mystery cases.
+An anatomy-first medical learning platform that connects body structures to disease, mechanism, and treatment - then makes learners prove their understanding through mystery cases.
 
 ## Stack
 
