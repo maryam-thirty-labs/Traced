@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import type { AnatomyPartDto } from "../types/anatomy.types";
 
 type Disease = AnatomyPartDto["diseases"][number];
@@ -17,7 +18,10 @@ function DiseaseCard({ disease }: { disease: Disease }) {
     .join(" + ");
 
   return (
-    <div className="rounded-lg border border-border-subtle bg-surface-card p-3 space-y-2">
+    <Link
+      href={`/diseases/${disease.canonicalId}`}
+      className="rounded-lg border border-border-subtle bg-surface-card p-3 space-y-2 cursor-pointer hover:border-accent-border hover:bg-accent-muted/20 transition-colors block"
+    >
       <div className="flex items-center justify-between">
         <h4 className="text-sm font-semibold text-text-primary">{disease.name}</h4>
         <span
@@ -42,7 +46,7 @@ function DiseaseCard({ disease }: { disease: Disease }) {
           ))}
         </div>
       )}
-    </div>
+    </Link>
   );
 }
 

@@ -58,11 +58,8 @@ export function AnatomyDetailDrawer({
             <>
               <span className="text-xs text-text-muted">{part.system} / {part.region}</span>
               <h2 className="text-base font-semibold text-text-primary">{part.displayName}</h2>
-              <span className="text-xs font-mono text-text-ghost">{part.canonicalId}</span>
             </>
-          ) : (
-            <span className="text-xs font-mono text-text-ghost">{canonicalId}</span>
-          )}
+          ) : null}
         </div>
         <button
           onClick={onClose}
