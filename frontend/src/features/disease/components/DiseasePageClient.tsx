@@ -9,6 +9,7 @@ import { getDisease, type DiseaseDetail } from "../lib/diseaseApi";
 import { DiseaseSymptomsTab } from "./DiseaseSymptomsTab";
 import { DiseaseInvestigationsTab } from "./DiseaseInvestigationsTab";
 import { DiseaseTreatmentTab } from "./DiseaseTreatmentTab";
+import { DiseaseTestYourselfTab } from "./DiseaseTestYourselfTab";
 
 const TABS = ["Overview", "Symptoms", "Investigations", "Treatment", "Test yourself"];
 
@@ -204,6 +205,10 @@ function DiseaseTabContent({ activeTab, disease }: { activeTab: string; disease:
 
   if (activeTab === "Treatment") {
     return <DiseaseTreatmentTab diseaseCanonicalId={disease.canonicalId} />;
+  }
+
+  if (activeTab === "Test yourself") {
+    return <DiseaseTestYourselfTab diseaseCanonicalId={disease.canonicalId} />;
   }
 
   return (
