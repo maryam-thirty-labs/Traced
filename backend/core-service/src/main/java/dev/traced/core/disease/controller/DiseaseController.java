@@ -1,6 +1,7 @@
 package dev.traced.core.disease.controller;
 
 import dev.traced.core.disease.dto.DiseaseDetailDto;
+import dev.traced.core.disease.dto.DiseaseSymptomDto;
 import dev.traced.core.disease.service.DiseaseService;
 import dev.traced.core.treatment.dto.TreatmentWithRoleDto;
 import lombok.RequiredArgsConstructor;
@@ -31,5 +32,13 @@ public class DiseaseController {
     ) {
         var relations = diseaseService.findTreatmentRelations(canonicalId);
         return ResponseEntity.ok(relations.stream().map(TreatmentWithRoleDto::from).toList());
+    }
+
+    @GetMapping("/{canonicalId}/symptoms")
+    public ResponseEntity<List<DiseaseSymptomDto>> getDiseaseSymptoms(
+        @PathVariable String canonicalId
+    ) {
+        var symptoms = diseaseService.findSymptoms(canonicalId);
+        return ResponseEntity.ok(symptoms.stream().map(DiseaseSymptomDto::from).toList());
     }
 }

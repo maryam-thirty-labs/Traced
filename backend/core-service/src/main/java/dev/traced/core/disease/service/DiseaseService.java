@@ -3,8 +3,10 @@ package dev.traced.core.disease.service;
 import dev.traced.core.common.EntityNotFoundException;
 import dev.traced.core.disease.entity.Disease;
 import dev.traced.core.disease.entity.DiseaseAlias;
+import dev.traced.core.disease.entity.DiseaseSymptom;
 import dev.traced.core.disease.repository.DiseaseAliasRepository;
 import dev.traced.core.disease.repository.DiseaseRepository;
+import dev.traced.core.disease.repository.DiseaseSymptomRepository;
 import dev.traced.core.relation.entity.DiseaseTreatmentRelation;
 import dev.traced.core.relation.repository.DiseaseTreatmentRelationRepository;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +23,7 @@ public class DiseaseService {
     private final DiseaseRepository diseaseRepository;
     private final DiseaseAliasRepository diseaseAliasRepository;
     private final DiseaseTreatmentRelationRepository diseaseTreatmentRelationRepository;
+    private final DiseaseSymptomRepository diseaseSymptomRepository;
 
     public Disease findByCanonicalId(String canonicalId) {
         return diseaseRepository.findByCanonicalId(canonicalId)
@@ -35,5 +38,10 @@ public class DiseaseService {
     public List<DiseaseTreatmentRelation> findTreatmentRelations(String canonicalId) {
         var disease = findByCanonicalId(canonicalId);
         return diseaseTreatmentRelationRepository.findByDiseaseId(disease.getId());
+    }
+
+    public List<DiseaseSymptom> findSymptoms(String canonicalId) {
+        findByCanonicalId(canonicalId);
+        return diseaseSymptomRepository.findByDiseaseCanonicalIdOrdered(canonicalId);
     }
 }
