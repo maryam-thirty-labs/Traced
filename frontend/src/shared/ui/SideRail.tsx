@@ -2,11 +2,12 @@
 
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { Compass, BookOpen, BarChart3, User } from "lucide-react";
+import { Compass, BookOpen, BarChart3, User, MessageSquare } from "lucide-react";
 
 const navItems = [
   { href: "/explorer", label: "Explorer", icon: Compass },
   { href: "/cases", label: "Cases", icon: BookOpen },
+  { href: "/community", label: "Community", icon: MessageSquare },
   { href: "/progress", label: "Progress", icon: BarChart3 },
   { href: "/profile", label: "Profile", icon: User },
 ] as const;
