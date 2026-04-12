@@ -2,10 +2,13 @@
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import { Hash } from "lucide-react";
-import { listChannels, listMessages } from "@/features/chat/lib/chatApi";
+import { listChannels, listMessages, sendMessage, reactToMessage } from "@/features/chat/lib/chatApi";
+import { MessageInput } from "@/features/chat/components/MessageInput";
+import { ReactionPicker } from "@/features/chat/components/ReactionPicker";
 import { SkeletonLoader } from "@/shared/ui/SkeletonLoader";
 import { ErrorState } from "@/shared/ui/ErrorState";
-import type { ChatChannel, ChatMessage } from "@/features/chat/types/chat.types";
+import type { ChatChannel, ChatMessage, ReactionEmoji } from "@/features/chat/types/chat.types";
+import { REACTION_ICON } from "@/features/chat/types/chat.types";
 
 export default function CommunityPage() {
   const [channels, setChannels] = useState<ChatChannel[]>([]);
@@ -49,6 +52,35 @@ export default function CommunityPage() {
       setLoadingMessages(false);
     }
   }, []);
+
+  async function handleSend(messageText: string) {
+    if (!activeChannel) return;
+    const newMessage = await sendMessage(activeChannel, messageText);
+    setMessages((prev) => [...prev, newMessage]);
+  }
+
+  async function handleReact(messageId: string, emoji: ReactionEmoji) {
+    if (!activeChannel) return;
+    // Optimistic: increment count
+    setMessages((prev) => prev.map((m) => {
+      if (m.messageId !== messageId) return m;
+      const counts = { ...m.reactionCounts };
+      counts[emoji] = (counts[emoji] ?? 0) + 1;
+      return { ...m, reactionCounts: counts };
+    }));
+    try {
+      await reactToMessage(activeChannel, messageId, emoji);
+    } catch {
+      // Revert on failure
+      setMessages((prev) => prev.map((m) => {
+        if (m.messageId !== messageId) return m;
+        const counts = { ...m.reactionCounts };
+        counts[emoji] = Math.max(0, (counts[emoji] ?? 1) - 1);
+        if (counts[emoji] === 0) delete counts[emoji];
+        return { ...m, reactionCounts: counts };
+      }));
+    }
+  }
 
   // When active channel changes: fetch history + subscribe to Realtime
   useEffect(() => {
@@ -132,7 +164,7 @@ export default function CommunityPage() {
             <p className="text-xs text-text-muted italic">No messages yet. Be the first to say hello.</p>
           )}
           {messages.map((m) => (
-            <div key={m.messageId} className="flex flex-col gap-0.5">
+            <div key={m.messageId} className="group flex flex-col gap-0.5 relative">
               <div className="flex items-baseline gap-2">
                 <span className="text-sm font-medium text-text-primary">{m.authorDisplayName}</span>
                 <span className="text-[10px] text-text-muted">
@@ -140,6 +172,8 @@ export default function CommunityPage() {
                 </span>
               </div>
               <p className="text-sm text-text-secondary whitespace-pre-wrap">{m.messageText}</p>
+
+              {/* Reaction counts */}
               {Object.keys(m.reactionCounts).length > 0 && (
                 <div className="flex gap-1 mt-1">
                   {Object.entries(m.reactionCounts).map(([emoji, count]) => (
@@ -147,19 +181,26 @@ export default function CommunityPage() {
                       key={emoji}
                       className="text-[10px] px-1.5 py-0.5 rounded bg-surface-elevated text-text-secondary"
                     >
-                      {emoji} {count}
+                      {REACTION_ICON[emoji as ReactionEmoji] ?? emoji} {count}
                     </span>
                   ))}
                 </div>
               )}
+
+              {/* Hover reaction picker */}
+              <div className="absolute right-0 top-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                <ReactionPicker onPick={(emoji) => handleReact(m.messageId, emoji)} />
+              </div>
             </div>
           ))}
         </div>
 
-        {/* Input bar placeholder (sprint 10.8) */}
-        <div className="px-6 py-3 border-t border-border-subtle">
-          <p className="text-xs text-text-muted italic">Message input coming in next sprint</p>
-        </div>
+        {/* Input bar */}
+        {activeChannel && (
+          <div className="px-6 py-3 border-t border-border-subtle">
+            <MessageInput onSend={handleSend} />
+          </div>
+        )}
       </main>
     </div>
   );
