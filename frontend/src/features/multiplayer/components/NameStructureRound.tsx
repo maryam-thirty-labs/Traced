@@ -45,7 +45,6 @@ export function NameStructureRound({
       <div className="rounded-lg border border-border-subtle bg-surface-card p-6 text-center space-y-2">
         <p className="text-xs text-text-muted">Region hint</p>
         <p className="text-lg font-medium text-text-primary">{payload.regionHint}</p>
-        <p className="text-[10px] font-mono text-text-ghost mt-2">{payload.canonicalId}</p>
       </div>
 
       <CountdownBar durationSeconds={roundTimerSeconds} />
