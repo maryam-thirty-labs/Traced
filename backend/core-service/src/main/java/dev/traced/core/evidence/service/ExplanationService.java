@@ -160,4 +160,115 @@ public class ExplanationService {
             .confidenceLabel("UNCERTAIN")
             .build();
     }
+
+    public GroundedExplanationDto generateSpecialityExplanation(String anatomyCanonicalId, String specialityCanonicalId) {
+        String cacheKey = CACHE_PREFIX + "spec:" + anatomyCanonicalId + ":" + specialityCanonicalId;
+        String cached = redisTemplate.opsForValue().get(cacheKey);
+        if (cached != null) {
+            try {
+                return objectMapper.readValue(cached, GroundedExplanationDto.class);
+            } catch (Exception e) {
+                log.warn("Failed to deserialize cached speciality explanation for {}/{}",
+                    anatomyCanonicalId, specialityCanonicalId, e);
+            }
+        }
+
+        // ONLY claims tagged to this specific speciality — no cross-speciality leakage
+        List<CandidateClaim> approvedClaims = candidateClaimRepository
+            .findBySubjectCanonicalIdAndStatusAndSpecialityCanonicalId(
+                anatomyCanonicalId, "APPROVED", specialityCanonicalId);
+
+        Set<String> chunkIds = new HashSet<>();
+        for (CandidateClaim claim : approvedClaims) {
+            if (claim.getSourceChunkIds() != null) {
+                try {
+                    List<String> ids = objectMapper.readValue(
+                        claim.getSourceChunkIds(),
+                        objectMapper.getTypeFactory().constructCollectionType(List.class, String.class)
+                    );
+                    chunkIds.addAll(ids);
+                } catch (Exception e) {
+                    log.warn("Failed to parse sourceChunkIds for claim {}", claim.getId(), e);
+                }
+            }
+        }
+
+        List<EvidenceChunk> chunks = chunkIds.stream()
+            .map(evidenceChunkRepository::findByChunkId)
+            .filter(Optional::isPresent)
+            .map(Optional::get)
+            .toList();
+
+        List<Map<String, Object>> claimMaps = approvedClaims.stream()
+            .map(c -> {
+                Map<String, Object> m = new HashMap<>();
+                m.put("id", c.getId().toString());
+                m.put("claimText", c.getClaimText());
+                m.put("relationType", c.getRelationType());
+                m.put("confidence", c.getConfidence());
+                return m;
+            }).toList();
+
+        List<Map<String, Object>> chunkMaps = chunks.stream()
+            .map(c -> {
+                Map<String, Object> m = new HashMap<>();
+                m.put("chunkId", c.getChunkId());
+                m.put("chunkText", c.getChunkText());
+                m.put("sourceDocumentId", c.getSourceDocument().getId().toString());
+                return m;
+            }).toList();
+
+        Map<String, Object> requestBody = Map.of(
+            "entity_id", anatomyCanonicalId,
+            "speciality_id", specialityCanonicalId,
+            "approved_claims", claimMaps,
+            "chunks", chunkMaps
+        );
+
+        RestClient restClient = RestClient.create(intelligenceServiceUrl);
+        GroundedExplanationDto result;
+        try {
+            JsonNode response = restClient.post()
+                .uri("/intelligence/grounding/explain")
+                .header("Content-Type", "application/json")
+                .body(requestBody)
+                .retrieve()
+                .body(JsonNode.class);
+
+            if (response == null) return uncertainResponse();
+
+            List<String> citedClaimIds = new ArrayList<>();
+            if (response.has("cited_claim_ids")) {
+                response.get("cited_claim_ids").forEach(n -> citedClaimIds.add(n.asText()));
+            }
+            List<String> citedChunkIds = new ArrayList<>();
+            if (response.has("cited_chunk_ids")) {
+                response.get("cited_chunk_ids").forEach(n -> citedChunkIds.add(n.asText()));
+            }
+
+            String contradictionNotice = response.has("contradiction_notice") && !response.get("contradiction_notice").isNull()
+                ? response.get("contradiction_notice").asText()
+                : null;
+
+            result = GroundedExplanationDto.builder()
+                .explanationText(response.path("explanation_text").asText(""))
+                .citedClaimIds(citedClaimIds)
+                .citedChunkIds(citedChunkIds)
+                .confidenceLabel(response.path("confidence_label").asText("UNCERTAIN"))
+                .contradictionNotice(contradictionNotice)
+                .build();
+        } catch (Exception e) {
+            log.error("Speciality grounding failed for {}/{}", anatomyCanonicalId, specialityCanonicalId, e);
+            return uncertainResponse();
+        }
+
+        try {
+            String json = objectMapper.writeValueAsString(result);
+            redisTemplate.opsForValue().set(cacheKey, json, CACHE_TTL);
+        } catch (Exception e) {
+            log.warn("Failed to cache speciality explanation", e);
+        }
+
+        return result;
+    }
 }

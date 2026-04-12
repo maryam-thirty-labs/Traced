@@ -25,4 +25,20 @@ public class ExplanationController {
         }
         return ResponseEntity.ok(explanationService.generateExplanation(canonicalId));
     }
+
+    @PostMapping("/speciality")
+    public ResponseEntity<GroundedExplanationDto> getSpecialityExplanation(
+        @RequestBody Map<String, String> request
+    ) {
+        String anatomyPartCanonicalId = request.get("anatomyPartCanonicalId");
+        String specialityCanonicalId = request.get("specialityCanonicalId");
+        if (anatomyPartCanonicalId == null || anatomyPartCanonicalId.isBlank()) {
+            throw new IllegalArgumentException("anatomyPartCanonicalId is required");
+        }
+        if (specialityCanonicalId == null || specialityCanonicalId.isBlank()) {
+            throw new IllegalArgumentException("specialityCanonicalId is required");
+        }
+        return ResponseEntity.ok(
+            explanationService.generateSpecialityExplanation(anatomyPartCanonicalId, specialityCanonicalId));
+    }
 }
