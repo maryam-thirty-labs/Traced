@@ -26,6 +26,7 @@ public class LeaderboardService {
     private final UserProfileRepository userProfileRepository;
     private final WeeklyXpSnapshotService weeklyXpSnapshotService;
     private final LevelService levelService;
+    private final FriendsService friendsService;
 
     public enum Period { WEEKLY, ALLTIME }
 
@@ -67,6 +68,37 @@ public class LeaderboardService {
                 .thenComparing(UserProfile::getJoinedAt))
             .toList();
         return rankAndPage(profilesToEntries(sorted, myProfileId), page, size);
+    }
+
+    public List<LeaderboardEntryDto> getFriendsWeekly(UUID myProfileId) {
+        UserProfile me = userProfileRepository.findById(myProfileId).orElse(null);
+        if (me == null) return List.of();
+
+        LocalDate monday = weeklyXpSnapshotService.currentWeekMonday();
+
+        List<UUID> friendIds = new ArrayList<>();
+        friendIds.add(myProfileId);
+        friendsService.listFriends(myProfileId).forEach(f -> friendIds.add(f.getId()));
+
+        List<WeeklyXpSnapshot> filtered = snapshotRepository.findAllByWeekStartDate(monday).stream()
+            .filter(s -> friendIds.contains(s.getUserProfile().getId()))
+            .toList();
+
+        return weeklyToEntries(filtered, myProfileId);
+    }
+
+    public List<LeaderboardEntryDto> getFriendsAllTime(UUID myProfileId) {
+        List<UUID> friendIds = new ArrayList<>();
+        friendIds.add(myProfileId);
+        friendsService.listFriends(myProfileId).forEach(f -> friendIds.add(f.getId()));
+
+        List<UserProfile> sorted = userProfileRepository.findAllById(friendIds).stream()
+            .sorted(Comparator
+                .comparingInt(UserProfile::getTotalXp).reversed()
+                .thenComparing(UserProfile::getJoinedAt))
+            .toList();
+
+        return profilesToEntries(sorted, myProfileId);
     }
 
     public MyRankDto getMyRank(UUID myProfileId, Scope scope, Period period) {
@@ -111,6 +143,11 @@ public class LeaderboardService {
             } else {
                 return getUniversityAllTime(filterUniversity, 0, Integer.MAX_VALUE, myProfileId);
             }
+        }
+        if (scope == Scope.FRIENDS) {
+            return period == Period.WEEKLY
+                ? getFriendsWeekly(myProfileId)
+                : getFriendsAllTime(myProfileId);
         }
         return List.of();
     }
