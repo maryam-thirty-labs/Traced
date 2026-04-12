@@ -1,10 +1,15 @@
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
-import { Hash } from "lucide-react";
-import { listChannels, listMessages, sendMessage, reactToMessage } from "@/features/chat/lib/chatApi";
+import { Hash, Plus, Flag } from "lucide-react";
+import {
+  listChannels, listMessages, sendMessage, reactToMessage,
+  createChannel, flagMessage,
+} from "@/features/chat/lib/chatApi";
 import { MessageInput } from "@/features/chat/components/MessageInput";
 import { ReactionPicker } from "@/features/chat/components/ReactionPicker";
+import { NewChannelModal } from "@/features/chat/components/NewChannelModal";
+import { getSession } from "@/shared/lib/auth/auth";
 import { SkeletonLoader } from "@/shared/ui/SkeletonLoader";
 import { ErrorState } from "@/shared/ui/ErrorState";
 import type { ChatChannel, ChatMessage, ReactionEmoji } from "@/features/chat/types/chat.types";
@@ -19,6 +24,10 @@ export default function CommunityPage() {
   const [error, setError] = useState(false);
   const unsubRef = useRef<(() => void) | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [showNewChannelModal, setShowNewChannelModal] = useState(false);
+  const [flaggedMessages, setFlaggedMessages] = useState<Set<string>>(new Set());
+
+  const myDisplayName = getSession()?.displayName ?? null;
 
   const fetchChannels = useCallback(async () => {
     setLoadingChannels(true);
@@ -57,6 +66,22 @@ export default function CommunityPage() {
     if (!activeChannel) return;
     const newMessage = await sendMessage(activeChannel, messageText);
     setMessages((prev) => [...prev, newMessage]);
+  }
+
+  async function handleCreateChannel(channelId: string, displayName: string) {
+    const created = await createChannel(channelId, displayName);
+    setChannels((prev) => [...prev, created]);
+    setActiveChannel(created.channelId);
+    setShowNewChannelModal(false);
+  }
+
+  async function handleFlag(messageId: string) {
+    try {
+      await flagMessage(messageId);
+      setFlaggedMessages((prev) => new Set(prev).add(messageId));
+    } catch {
+      // Silent — user still sees the message
+    }
   }
 
   async function handleReact(messageId: string, emoji: ReactionEmoji) {
@@ -123,8 +148,15 @@ export default function CommunityPage() {
     <div className="flex h-full">
       {/* Channel list */}
       <aside className="w-56 border-r border-border-default bg-surface-panel overflow-y-auto">
-        <div className="px-3 py-3 border-b border-border-subtle">
+        <div className="flex items-center justify-between px-3 py-3 border-b border-border-subtle">
           <h2 className="text-xs font-semibold uppercase text-text-muted">Channels</h2>
+          <button
+            onClick={() => setShowNewChannelModal(true)}
+            aria-label="New topic"
+            className="flex items-center justify-center w-6 h-6 rounded text-text-muted hover:text-accent-text hover:bg-surface-elevated"
+          >
+            <Plus size={12} />
+          </button>
         </div>
         <div className="py-1">
           {channels.map((c) => (
@@ -187,9 +219,24 @@ export default function CommunityPage() {
                 </div>
               )}
 
-              {/* Hover reaction picker */}
-              <div className="absolute right-0 top-0 opacity-0 group-hover:opacity-100 transition-opacity">
+              {/* Hover reaction picker + flag (flag hidden on own messages) */}
+              <div className="absolute right-0 top-0 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                 <ReactionPicker onPick={(emoji) => handleReact(m.messageId, emoji)} />
+                {myDisplayName !== m.authorDisplayName && (
+                  flaggedMessages.has(m.messageId) ? (
+                    <span className="text-[10px] px-2 py-1 rounded bg-amber-400/10 text-amber-400">
+                      Flagged for review
+                    </span>
+                  ) : (
+                    <button
+                      onClick={() => handleFlag(m.messageId)}
+                      aria-label="Flag message"
+                      className="flex items-center justify-center w-7 h-7 rounded-lg text-text-muted hover:text-amber-400 hover:bg-surface-elevated"
+                    >
+                      <Flag size={12} />
+                    </button>
+                  )
+                )}
               </div>
             </div>
           ))}
@@ -202,6 +249,13 @@ export default function CommunityPage() {
           </div>
         )}
       </main>
+
+      {showNewChannelModal && (
+        <NewChannelModal
+          onCancel={() => setShowNewChannelModal(false)}
+          onConfirm={handleCreateChannel}
+        />
+      )}
     </div>
   );
 }
