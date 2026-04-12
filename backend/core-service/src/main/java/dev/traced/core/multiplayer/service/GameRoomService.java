@@ -32,6 +32,7 @@ public class GameRoomService {
     private final GameParticipantRepository participantRepository;
     private final UserProfileRepository userProfileRepository;
     private final RoomCodeGenerator codeGenerator;
+    private final RoomBroadcaster broadcaster;
 
     @Transactional
     public GameRoomDto createRoom(UUID hostProfileId, String gameMode, String difficulty, String systemCanonicalId) {
@@ -94,7 +95,9 @@ public class GameRoomService {
             .build();
         participantRepository.save(participant);
 
-        return toDto(room);
+        GameRoomDto dto = toDto(room);
+        broadcaster.broadcastParticipantsUpdate(dto);
+        return dto;
     }
 
     @Transactional
@@ -109,6 +112,7 @@ public class GameRoomService {
         }
         room.setStatus("ABANDONED");
         roomRepository.save(room);
+        broadcaster.broadcastRoomAbandoned(roomCode);
     }
 
     @Transactional
