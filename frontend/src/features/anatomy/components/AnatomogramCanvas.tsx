@@ -11,6 +11,8 @@ type AnatomogramCanvasProps = {
   selectedSystem: AnatomySystem;
   selectedCanonicalId: string | null;
   onPartSelect: (canonicalId: string | null) => void;
+  /** When non-empty, only these canonical IDs are highlighted; others dim further. */
+  specialityFocusCanonicalIds?: Set<string>;
 };
 
 const HIGHLIGHT_COLOR = "#7c5cfc";
@@ -25,6 +27,7 @@ export function AnatomogramCanvas({
   selectedSystem,
   selectedCanonicalId,
   onPartSelect,
+  specialityFocusCanonicalIds,
 }: AnatomogramCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);
@@ -98,16 +101,24 @@ export function AnatomogramCanvas({
     });
 
     // Highlight supported organs for current system
+    const hasSpecialityFilter = specialityFocusCanonicalIds && specialityFocusCanonicalIds.size > 0;
+
     supportedIds.forEach((id) => {
       const el = svg.querySelector<SVGElement>(`#${id}`);
       if (!el) return;
 
+      const canonicalId = resolveCanonicalId(id);
       const isSelected = id === selectedAnatomogramId;
+      const isSpecialityFocus = hasSpecialityFilter && canonicalId !== null
+        && specialityFocusCanonicalIds!.has(canonicalId);
+      const shouldDim = hasSpecialityFilter && !isSpecialityFocus && !isSelected;
 
       el.style.opacity = isSelected
         ? SELECT_OPACITY
-        : SHOW_OPACITY;
-      el.style.cursor = "pointer";
+        : shouldDim
+          ? DIM_OPACITY
+          : SHOW_OPACITY;
+      el.style.cursor = shouldDim ? "default" : "pointer";
 
       // Color the paths inside this group
       const paths = el.querySelectorAll<SVGElement>("path, circle, ellipse, rect");
@@ -129,7 +140,7 @@ export function AnatomogramCanvas({
 
     // Click on empty area clears selection
     svg.onclick = () => onPartSelect(null);
-  }, [supportedIds, selectedAnatomogramId, handleClick, onPartSelect]);
+  }, [supportedIds, selectedAnatomogramId, handleClick, onPartSelect, specialityFocusCanonicalIds]);
 
   return (
     <div
