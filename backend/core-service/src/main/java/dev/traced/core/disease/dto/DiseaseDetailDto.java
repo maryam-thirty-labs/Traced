@@ -16,6 +16,7 @@ public record DiseaseDetailDto(
     List<Map<String, String>> etymology,
     String commonness,
     String category,
+    String overview,
     List<AliasDto> aliases,
     String status
 ) {
@@ -44,6 +45,7 @@ public record DiseaseDetailDto(
             .etymology(etymology)
             .commonness(disease.getCommonness())
             .category(disease.getCategory())
+            .overview(disease.getOverview())
             .aliases(aliases.stream().map(AliasDto::from).toList())
             .status(disease.getStatus())
             .build();

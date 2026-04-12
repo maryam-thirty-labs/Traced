@@ -35,6 +35,9 @@ public class Disease {
 
     private String category;
 
+    @Column(columnDefinition = "TEXT")
+    private String overview;
+
     @Column(nullable = false)
     @Builder.Default
     private String status = "ACTIVE";

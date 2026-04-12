@@ -6,6 +6,7 @@ import { TabGroup } from "@/shared/ui/TabGroup";
 import { SkeletonLoader } from "@/shared/ui/SkeletonLoader";
 import { ErrorState } from "@/shared/ui/ErrorState";
 import { getDisease, type DiseaseDetail } from "../lib/diseaseApi";
+import { DiseaseSymptomsTab } from "./DiseaseSymptomsTab";
 
 const TABS = ["Overview", "Symptoms", "Investigations", "Treatment", "Test yourself"];
 
@@ -168,11 +169,13 @@ function DiseaseTabContent({ activeTab, disease }: { activeTab: string; disease:
     return (
       <div className="max-w-2xl space-y-4">
         <h2 className="text-xl font-semibold text-text-primary">{disease.name}</h2>
-        <p className="text-sm leading-relaxed text-text-secondary">
-          {disease.category
-            ? `${disease.name} is a ${disease.category.toLowerCase()} condition.`
-            : disease.name}
-        </p>
+        {disease.overview ? (
+          <p className="text-sm leading-relaxed text-text-secondary whitespace-pre-line">
+            {disease.overview}
+          </p>
+        ) : (
+          <p className="text-sm text-text-muted">No overview available.</p>
+        )}
         {disease.etymology.length > 0 && (
           <p className="text-sm leading-relaxed text-text-secondary">
             The name comes from{" "}
@@ -187,6 +190,10 @@ function DiseaseTabContent({ activeTab, disease }: { activeTab: string; disease:
         )}
       </div>
     );
+  }
+
+  if (activeTab === "Symptoms") {
+    return <DiseaseSymptomsTab diseaseCanonicalId={disease.canonicalId} />;
   }
 
   return (
