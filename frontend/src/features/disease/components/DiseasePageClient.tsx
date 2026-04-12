@@ -7,6 +7,8 @@ import { SkeletonLoader } from "@/shared/ui/SkeletonLoader";
 import { ErrorState } from "@/shared/ui/ErrorState";
 import { getDisease, type DiseaseDetail } from "../lib/diseaseApi";
 import { DiseaseSymptomsTab } from "./DiseaseSymptomsTab";
+import { DiseaseInvestigationsTab } from "./DiseaseInvestigationsTab";
+import { DiseaseTreatmentTab } from "./DiseaseTreatmentTab";
 
 const TABS = ["Overview", "Symptoms", "Investigations", "Treatment", "Test yourself"];
 
@@ -194,6 +196,14 @@ function DiseaseTabContent({ activeTab, disease }: { activeTab: string; disease:
 
   if (activeTab === "Symptoms") {
     return <DiseaseSymptomsTab diseaseCanonicalId={disease.canonicalId} />;
+  }
+
+  if (activeTab === "Investigations") {
+    return <DiseaseInvestigationsTab diseaseCanonicalId={disease.canonicalId} />;
+  }
+
+  if (activeTab === "Treatment") {
+    return <DiseaseTreatmentTab diseaseCanonicalId={disease.canonicalId} />;
   }
 
   return (
