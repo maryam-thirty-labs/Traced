@@ -2,22 +2,25 @@
 
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
-import { getProgress } from "@/features/progression/lib/progressApi";
+import { getProgress, getProfile } from "@/features/progression/lib/progressApi";
 import { SkeletonLoader } from "@/shared/ui/SkeletonLoader";
 import { ErrorState } from "@/shared/ui/ErrorState";
-import type { ProgressDto } from "@/features/progression/types/progress.types";
+import { LeaderboardSection } from "@/features/leaderboard/components/LeaderboardSection";
+import type { ProgressDto, UserProfileDto } from "@/features/progression/types/progress.types";
 
 export default function ProgressPage() {
   const [progress, setProgress] = useState<ProgressDto | null>(null);
+  const [profile, setProfile] = useState<UserProfileDto | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
   const fetchProgress = useCallback(() => {
     setLoading(true);
     setError(false);
-    getProgress()
-      .then((data) => {
-        setProgress(data);
+    Promise.all([getProgress(), getProfile()])
+      .then(([progressData, profileData]) => {
+        setProgress(progressData);
+        setProfile(profileData);
         setLoading(false);
       })
       .catch(() => {
@@ -120,6 +123,9 @@ export default function ProgressPage() {
           </Link>
         </div>
       )}
+
+      {/* Leaderboard */}
+      <LeaderboardSection userUniversity={profile?.university ?? null} />
     </div>
   );
 }

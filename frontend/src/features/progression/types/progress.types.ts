@@ -6,6 +6,7 @@ export type UserProfileDto = {
   currentStreak: number;
   unlockedSystems: string[];
   etymologyEnabled: boolean;
+  university: string | null;
 };
 
 export type ProgressDto = {
