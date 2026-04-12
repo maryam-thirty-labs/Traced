@@ -12,6 +12,7 @@ export async function getProgress(): Promise<ProgressDto> {
 export async function updatePreferences(prefs: {
   etymologyEnabled?: boolean;
   preferredSystem?: string;
+  university?: string;
 }): Promise<void> {
   await patch("/api/profile/me/preferences", prefs);
 }

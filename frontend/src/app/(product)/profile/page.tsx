@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { getProfile, updatePreferences, resetProgress } from "@/features/progression/lib/progressApi";
 import { ResetProgressModal } from "@/features/progression/components/ResetProgressModal";
+import { FriendsManager } from "@/features/leaderboard/components/FriendsManager";
 import { SkeletonLoader } from "@/shared/ui/SkeletonLoader";
 import { ErrorState } from "@/shared/ui/ErrorState";
 import type { UserProfileDto } from "@/features/progression/types/progress.types";
@@ -150,6 +151,26 @@ export default function ProfilePage() {
             ))}
           </select>
         </div>
+
+        <div className="flex items-center justify-between rounded-lg border border-border-subtle bg-surface-card p-4">
+          <div>
+            <p className="text-sm text-text-primary">University</p>
+            <p className="text-xs text-text-muted">Used for the university leaderboard</p>
+          </div>
+          <input
+            type="text"
+            defaultValue={profile.university ?? ""}
+            placeholder="e.g. KCL"
+            onBlur={async (e) => {
+              const value = e.target.value.trim();
+              if (value !== (profile.university ?? "")) {
+                await updatePreferences({ university: value });
+                setProfile({ ...profile, university: value || null });
+              }
+            }}
+            className="text-xs px-2 py-1 rounded bg-surface-elevated text-text-secondary border border-border-default focus:outline-none focus:border-accent w-32"
+          />
+        </div>
       </div>
 
       {/* Badges */}
@@ -179,6 +200,9 @@ export default function ProfilePage() {
           })}
         </div>
       </div>
+
+      {/* Friends */}
+      <FriendsManager />
 
       {/* Danger zone */}
       <div className="space-y-3 pt-4 border-t border-border-subtle">
