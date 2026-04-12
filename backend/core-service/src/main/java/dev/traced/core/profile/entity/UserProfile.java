@@ -48,5 +48,8 @@ public class UserProfile {
     @Column(name = "last_active_date")
     private LocalDate lastActiveDate;
 
+    @Column(name = "university")
+    private String university;
+
     // No currentLevel column — derived by LevelService, never persisted
 }

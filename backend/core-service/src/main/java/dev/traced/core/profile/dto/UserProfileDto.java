@@ -12,5 +12,6 @@ public record UserProfileDto(
     String levelTitle,
     int currentStreak,
     List<String> unlockedSystems,
-    boolean etymologyEnabled
+    boolean etymologyEnabled,
+    String university
 ) {}

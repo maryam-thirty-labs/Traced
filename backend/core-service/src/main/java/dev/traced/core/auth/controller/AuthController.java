@@ -21,7 +21,7 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<Map<String, Object>> register(@Valid @RequestBody RegisterRequest request) {
-        var result = authService.register(request.email(), request.password(), request.displayName());
+        var result = authService.register(request.email(), request.password(), request.displayName(), request.university());
         return ResponseEntity.status(HttpStatus.CREATED).body(result);
     }
 
@@ -34,7 +34,8 @@ public class AuthController {
     public record RegisterRequest(
         @NotBlank @Email String email,
         @NotBlank @Size(min = 6) String password,
-        @NotBlank String displayName
+        @NotBlank String displayName,
+        String university
     ) {}
 
     public record LoginRequest(

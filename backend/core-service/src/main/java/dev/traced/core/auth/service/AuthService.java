@@ -22,7 +22,7 @@ public class AuthService {
     private final JwtService jwtService;
 
     @Transactional
-    public Map<String, Object> register(String email, String password, String displayName) {
+    public Map<String, Object> register(String email, String password, String displayName, String university) {
         if (userRepository.existsByEmail(email)) {
             throw new DataIntegrityViolationException("Email already registered");
         }
@@ -38,6 +38,7 @@ public class AuthService {
         UserProfile profile = UserProfile.builder()
             .userId(user.getId())
             .displayName(displayName)
+            .university(university)
             .build();
         userProfileRepository.save(profile);
 

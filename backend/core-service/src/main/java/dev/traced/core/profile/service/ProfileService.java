@@ -41,6 +41,7 @@ public class ProfileService {
             .currentStreak(profile.getCurrentStreak())
             .unlockedSystems(unlockService.getUnlockedSystems(level))
             .etymologyEnabled(profile.getEtymologyEnabled())
+            .university(profile.getUniversity())
             .build();
     }
 
@@ -102,6 +103,9 @@ public class ProfileService {
         }
         if (request.preferredSystem() != null) {
             profile.setPreferredSystem(request.preferredSystem());
+        }
+        if (request.university() != null) {
+            profile.setUniversity(request.university());
         }
         userProfileRepository.save(profile);
     }
