@@ -8,6 +8,7 @@ import dev.traced.core.cases.repository.CaseAttemptRepository;
 import dev.traced.core.cases.repository.CaseOptionRepository;
 import dev.traced.core.cases.repository.CaseQuestionRepository;
 import dev.traced.core.common.EntityNotFoundException;
+import dev.traced.core.leaderboard.service.WeeklyXpSnapshotService;
 import dev.traced.core.profile.entity.UserProfile;
 import dev.traced.core.profile.repository.UserProfileRepository;
 import dev.traced.core.progression.service.LevelService;
@@ -32,6 +33,7 @@ public class CaseSubmissionService {
     private final UserProfileRepository userProfileRepository;
     private final LevelService levelService;
     private final MasteryService masteryService;
+    private final WeeklyXpSnapshotService weeklyXpSnapshotService;
 
     @Transactional
     public SubmissionResult submit(String caseId, UUID userProfileId, List<AnswerDto> answers) {
@@ -89,6 +91,9 @@ public class CaseSubmissionService {
         // Update mastery — same transaction
         String systemCanonicalId = c.getLinkedAnatomy().getSystem().getCanonicalId();
         masteryService.update(userProfileId, systemCanonicalId, outcome.equals("CORRECT"), profile);
+
+        // Update weekly XP snapshot — same transaction
+        weeklyXpSnapshotService.generateForCurrentWeek(profile);
 
         int currentLevel = levelService.calculateLevel(profile.getTotalXp());
 
