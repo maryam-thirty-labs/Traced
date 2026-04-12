@@ -46,6 +46,29 @@ public class LeaderboardService {
         return rankAndPage(profilesToEntries(sorted, myProfileId), page, size);
     }
 
+    public List<LeaderboardEntryDto> getUniversityWeekly(String university, int page, int size, UUID myProfileId) {
+        if (university == null || university.isBlank()) return List.of();
+        String filter = university.toLowerCase();
+        LocalDate monday = weeklyXpSnapshotService.currentWeekMonday();
+        List<WeeklyXpSnapshot> all = snapshotRepository.findAllByWeekStartDate(monday).stream()
+            .filter(s -> s.getUserProfile().getUniversity() != null
+                && s.getUserProfile().getUniversity().toLowerCase().equals(filter))
+            .toList();
+        return rankAndPage(weeklyToEntries(all, myProfileId), page, size);
+    }
+
+    public List<LeaderboardEntryDto> getUniversityAllTime(String university, int page, int size, UUID myProfileId) {
+        if (university == null || university.isBlank()) return List.of();
+        String filter = university.toLowerCase();
+        List<UserProfile> sorted = userProfileRepository.findAll().stream()
+            .filter(p -> p.getUniversity() != null && p.getUniversity().toLowerCase().equals(filter))
+            .sorted(Comparator
+                .comparingInt(UserProfile::getTotalXp).reversed()
+                .thenComparing(UserProfile::getJoinedAt))
+            .toList();
+        return rankAndPage(profilesToEntries(sorted, myProfileId), page, size);
+    }
+
     public MyRankDto getMyRank(UUID myProfileId, Scope scope, Period period) {
         List<LeaderboardEntryDto> full = fullList(scope, period, myProfileId, null);
         int myIndex = -1;
@@ -81,6 +104,13 @@ public class LeaderboardService {
                 .comparingInt(UserProfile::getTotalXp).reversed()
                 .thenComparing(UserProfile::getJoinedAt));
             return profilesToEntries(sorted, myProfileId);
+        }
+        if (scope == Scope.UNIVERSITY && filterUniversity != null) {
+            if (period == Period.WEEKLY) {
+                return getUniversityWeekly(filterUniversity, 0, Integer.MAX_VALUE, myProfileId);
+            } else {
+                return getUniversityAllTime(filterUniversity, 0, Integer.MAX_VALUE, myProfileId);
+            }
         }
         return List.of();
     }
