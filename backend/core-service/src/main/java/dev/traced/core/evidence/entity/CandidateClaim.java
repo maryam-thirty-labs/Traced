@@ -53,4 +53,7 @@ public class CandidateClaim {
     @Column(name = "created_at", nullable = false)
     @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();
+
+    @Column(name = "speciality_canonical_id")
+    private String specialityCanonicalId;
 }

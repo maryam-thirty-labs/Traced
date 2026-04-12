@@ -36,6 +36,7 @@ public class AdminEvidenceController {
             .trustScore(new BigDecimal(body.get("trust_score").toString()))
             .jurisdiction((String) body.get("jurisdiction"))
             .rawText((String) body.get("raw_text"))
+            .specialityCanonicalId((String) body.get("speciality_canonical_id"))
             .build();
 
         doc = sourceDocumentRepository.save(doc);
@@ -54,6 +55,7 @@ public class AdminEvidenceController {
                 .confidence(new java.math.BigDecimal(c.get("confidence").toString()))
                 .status("CANDIDATE") // Always CANDIDATE — regardless of what FastAPI sends
                 .extractionModel((String) c.get("extraction_model"))
+                .specialityCanonicalId((String) c.get("speciality_canonical_id"))
                 .build();
             candidateClaimRepository.save(claim);
             count++;

@@ -44,4 +44,7 @@ public class SourceDocument {
     @Column(nullable = false)
     @Builder.Default
     private String status = "ACTIVE";
+
+    @Column(name = "speciality_canonical_id")
+    private String specialityCanonicalId;
 }

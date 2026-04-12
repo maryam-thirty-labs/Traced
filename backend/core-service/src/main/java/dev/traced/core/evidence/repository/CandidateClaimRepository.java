@@ -9,4 +9,6 @@ import java.util.UUID;
 public interface CandidateClaimRepository extends JpaRepository<CandidateClaim, UUID> {
     List<CandidateClaim> findByStatus(String status);
     List<CandidateClaim> findBySubjectCanonicalIdAndStatus(String subjectCanonicalId, String status);
+    List<CandidateClaim> findBySubjectCanonicalIdAndStatusAndSpecialityCanonicalId(
+        String subjectCanonicalId, String status, String specialityCanonicalId);
 }
