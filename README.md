@@ -36,9 +36,9 @@ The other gaps were just as clear. Most anatomy tools are encyclopaedias -
 you look things up passively. Traced is progression-based, closer to Duolingo 
 than a textbook. The RAG pipeline surfaces uncertainty explicitly rather than 
 presenting everything with equal confidence, which felt important for a medical 
-context where overconfidence is genuinely dangerous. And connecting anatomy 
+context where overconfidence can be dangerous. And connecting anatomy 
 exploration directly to clinical reasoning cases creates a loop - explore, 
-understand, apply - that makes learning stick rather than just accumulate.
+understand, apply - that makes learning stick.
 
 ## Architecture
 
