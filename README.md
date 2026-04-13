@@ -23,7 +23,7 @@ Traced lets you click any part of a body model to learn the anatomy, the disease
 
 ## Why I built this
 
-I was at a crossroads after my CS degree -- medicine was on the table as a 
+I was at a crossroads during my CS degree - medicine was on the table as a 
 possible path, and I wanted to know if I actually cared about the space or 
 was just romanticising it. Building Traced was partly the test. If I enjoyed 
 building an anatomy learning app I would learn something about whether I 
