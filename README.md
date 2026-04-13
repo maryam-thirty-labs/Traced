@@ -27,11 +27,10 @@ I was at a crossroads during my CS degree - medicine was on the table as a
 possible path, and I wanted to know if I actually cared about the space or 
 was just romanticising it. Building Traced was partly the test. If I enjoyed 
 building an anatomy learning app I would learn something about whether I 
-genuinely cared. I did enjoy it - and the further I got the more I noticed 
+genuinely cared. The further I got into buiding, the more I noticed 
 what was missing. Nobody breaks down the terminology. Every medical term is 
 built from Greek and Latin roots, and once you can break them down the 
-vocabulary stops feeling arbitrary. No resource I found did this - they all 
-just listed disease names and expected memorisation.
+vocabulary stops feeling arbitrary. 
 
 The other gaps were just as clear. Most anatomy tools are encyclopaedias - 
 you look things up passively. Traced is progression-based, closer to Duolingo 
