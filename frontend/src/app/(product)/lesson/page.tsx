@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Flame } from "lucide-react";
 import { completeTodayLesson, getTodayLesson } from "@/features/lesson/lib/lessonApi";
 import { RetrievalPhase } from "@/features/lesson/components/RetrievalPhase";
+import { ExplorationPhase } from "@/features/lesson/components/ExplorationPhase";
 import { SkeletonLoader } from "@/shared/ui/SkeletonLoader";
 import { ErrorState } from "@/shared/ui/ErrorState";
 import type {
@@ -90,38 +91,12 @@ export default function LessonPage() {
     return <RetrievalPhase lesson={lesson} onDone={handleRetrievalDone} />;
   }
   if (phase === "exploration") {
-    return <ExplorationPhasePlaceholder lesson={lesson} onDone={handleExplorationDone} />;
+    return <ExplorationPhase lesson={lesson} onDone={handleExplorationDone} />;
   }
   return <AhaPhasePlaceholder completion={completion} />;
 }
 
-// Placeholder components — Sprint 12/13 flesh these out with real UI.
-
-function ExplorationPhasePlaceholder({
-  lesson,
-  onDone,
-}: {
-  lesson: LessonDto;
-  onDone: () => void;
-}) {
-  return (
-    <div className="max-w-md mx-auto px-6 py-8 space-y-4">
-      <p className="text-xs uppercase tracking-wider text-text-muted">Exploration</p>
-      <h1 className="text-xl font-semibold text-text-primary">
-        {lesson.explore?.displayName ?? "No explore structure"}
-      </h1>
-      <p className="text-sm text-text-secondary">
-        (Sprint 12 renders etymology reveal + Story Mode explanation + diagram here.)
-      </p>
-      <button
-        onClick={onDone}
-        className="px-4 py-2 text-sm font-medium rounded-lg bg-accent text-white"
-      >
-        Finish lesson
-      </button>
-    </div>
-  );
-}
+// Aha phase placeholder — Sprint 13 fleshes out with share card and animations.
 
 function AhaPhasePlaceholder({ completion }: { completion: LessonCompletionDto | null }) {
   return (
