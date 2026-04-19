@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Lock, Search, Share2 } from "lucide-react";
 import { getGarden } from "@/features/etymology/lib/etymologyApi";
+import { shareOrDownloadCard } from "@/features/etymology/lib/shareCard";
 import { SkeletonLoader } from "@/shared/ui/SkeletonLoader";
 import { ErrorState } from "@/shared/ui/ErrorState";
 import type {
@@ -158,20 +159,25 @@ export default function EtymologyGardenPage() {
 }
 
 async function shareRoot(entry: EtymologyEntry) {
-  const text = `"${entry.root}" — ${entry.origin ?? ""} for "${entry.meaning ?? ""}". Learn more on Traced.`;
-  const nav = navigator as Navigator & { share?: (d: ShareData) => Promise<void> };
-  if (nav.share) {
-    try {
-      await nav.share({ title: "Traced etymology", text });
-      return;
-    } catch {
-      // fall through
-    }
-  }
   try {
-    await navigator.clipboard.writeText(text);
+    await shareOrDownloadCard(entry);
   } catch {
-    // no-op
+    // Share card generation failed — silently fall back to plain-text share.
+    const text = `"${entry.root}" — ${entry.origin ?? ""} for "${entry.meaning ?? ""}". Learn more on Traced.`;
+    const nav = navigator as Navigator & { share?: (d: ShareData) => Promise<void> };
+    if (nav.share) {
+      try {
+        await nav.share({ title: "Traced etymology", text });
+        return;
+      } catch {
+        // fall through
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      // no-op
+    }
   }
 }
 
