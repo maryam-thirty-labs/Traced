@@ -37,4 +37,7 @@ public class AnatomyPart {
     @Column(nullable = false)
     @Builder.Default
     private String status = "ACTIVE";
+
+    @Column(name = "etymology_root_id")
+    private UUID etymologyRootId;
 }
