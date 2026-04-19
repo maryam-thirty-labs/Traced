@@ -2,14 +2,17 @@ package dev.traced.core.cases.controller;
 
 import dev.traced.core.cases.dto.CaseDetailDto;
 import dev.traced.core.cases.dto.CaseSummaryDto;
+import dev.traced.core.cases.dto.WeeklyCaseResponseDto;
 import dev.traced.core.cases.service.CaseService;
 import dev.traced.core.cases.service.CaseSubmissionService;
 import dev.traced.core.cases.service.CaseSubmissionService.AnswerDto;
 import dev.traced.core.cases.service.CaseSubmissionService.SubmissionResult;
+import dev.traced.core.cases.service.WeeklyCaseService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -22,6 +25,13 @@ public class CaseController {
 
     private final CaseService caseService;
     private final CaseSubmissionService caseSubmissionService;
+    private final WeeklyCaseService weeklyCaseService;
+
+    @GetMapping("/weekly")
+    public ResponseEntity<WeeklyCaseResponseDto> getWeeklyCase(Authentication auth) {
+        UUID userId = (UUID) auth.getPrincipal();
+        return ResponseEntity.ok(weeklyCaseService.getCurrentWeekCase(userId));
+    }
 
     @GetMapping("/{caseId}")
     public ResponseEntity<CaseDetailDto> getCase(@PathVariable String caseId) {
