@@ -1,6 +1,5 @@
-package dev.traced.core.multiplayer;
+package dev.traced.core.multiplayer.service;
 
-import dev.traced.core.multiplayer.service.RoomCodeGenerator;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
