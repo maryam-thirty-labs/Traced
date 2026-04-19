@@ -16,4 +16,10 @@ public interface AnatomyPartRepository extends JpaRepository<AnatomyPart, UUID> 
 
     @Query("SELECT ap FROM AnatomyPart ap JOIN FETCH ap.system WHERE ap.system.canonicalId = :systemCanonicalId AND ap.status = 'ACTIVE'")
     List<AnatomyPart> findBySystemCanonicalId(String systemCanonicalId);
+
+    @Query("SELECT ap FROM AnatomyPart ap JOIN FETCH ap.system WHERE ap.system.id = :systemId AND ap.status = 'ACTIVE' ORDER BY ap.displayName ASC")
+    List<AnatomyPart> findBySystemIdOrderByDisplayName(UUID systemId);
+
+    @Query("SELECT ap FROM AnatomyPart ap WHERE ap.id IN :ids")
+    List<AnatomyPart> findByIdIn(java.util.Collection<UUID> ids);
 }
