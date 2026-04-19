@@ -58,5 +58,12 @@ public class UserProfile {
     @Column(name = "current_system_id")
     private UUID currentSystemId;
 
+    @Column(name = "streak_freeze_available", nullable = false)
+    @Builder.Default
+    private Boolean streakFreezeAvailable = true;
+
+    @Column(name = "streak_freeze_used_week")
+    private Integer streakFreezeUsedWeek;
+
     // No currentLevel column — derived by LevelService, never persisted
 }
