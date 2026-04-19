@@ -1,208 +1,128 @@
 import Link from "next/link";
 
+const FEATURES = [
+  {
+    title: "Daily 5-minute lessons",
+    description:
+      "Recall, explore, and one aha moment — every day, always under five minutes.",
+  },
+  {
+    title: "Etymology that sticks",
+    description:
+      "Every structure's name is a story. Learn the root and the anatomy becomes unforgettable.",
+  },
+  {
+    title: "Mystery cases weekly",
+    description:
+      "Earn a clinical vignette every week when your streak holds — diagnose from symptoms.",
+  },
+];
+
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-surface text-text-primary">
-      {/* Nav */}
+    <div className="min-h-screen" style={{ backgroundColor: "#FBF9F5", color: "#16112E" }}>
       <nav className="flex items-center justify-between px-6 py-4 max-w-5xl mx-auto">
-        <span className="text-xl font-bold text-accent-text">Traced</span>
+        <span
+          className="text-xl font-bold"
+          style={{ color: "#5A2B94", fontFamily: "var(--font-display)" }}
+        >
+          Traced
+        </span>
         <div className="flex items-center gap-4">
-          <Link href="/login" className="text-sm text-text-secondary hover:text-text-primary">
+          <Link href="/login" className="text-sm" style={{ color: "#5C5472" }}>
             Sign in
           </Link>
           <Link
-            href="/register"
-            className="text-sm font-medium px-4 py-2 rounded-lg bg-accent text-white"
+            href="/welcome"
+            className="text-sm font-medium px-4 py-2 rounded-lg text-white"
+            style={{ backgroundColor: "#5A2B94" }}
           >
-            Start exploring
+            Start learning
           </Link>
         </div>
       </nav>
 
-      {/* Hero */}
-      <section className="flex flex-col items-center text-center px-6 py-24 max-w-3xl mx-auto gap-6">
-        <h1 className="text-4xl font-bold leading-tight sm:text-5xl">
-          Click the body.<br />Understand what breaks.
+      <section className="flex flex-col items-center text-center px-6 py-20 max-w-3xl mx-auto gap-6">
+        <h1
+          className="text-4xl sm:text-5xl leading-tight"
+          style={{ fontFamily: "var(--font-display)", color: "#16112E" }}
+        >
+          Textbooks give you labels.<br />Traced gives you reasons.
         </h1>
-        <p className="text-lg text-text-secondary max-w-xl">
-          An anatomy-first medical learning platform that connects body structures
-          to disease, mechanism, and treatment — then makes you prove it through mystery cases.
+        <p className="text-lg max-w-xl" style={{ color: "#5C5472" }}>
+          The anatomy learning app that makes the human body click.
         </p>
-        <div className="flex gap-3 mt-2">
-          <Link
-            href="/register"
-            className="px-6 py-3 text-sm font-medium rounded-lg bg-accent text-white"
-          >
-            Start exploring
-          </Link>
-          <Link
-            href="/login"
-            className="px-6 py-3 text-sm font-medium rounded-lg border border-border-default text-text-secondary hover:text-text-primary"
-          >
-            Sign in
-          </Link>
-        </div>
+        <Link
+          href="/welcome"
+          className="mt-2 px-8 py-3 text-base font-semibold rounded-lg text-white"
+          style={{ backgroundColor: "#5A2B94" }}
+        >
+          Start learning, it&apos;s free
+        </Link>
+        <p className="text-xs" style={{ color: "#9B95B8" }}>
+          No medical background needed.
+        </p>
       </section>
 
-      {/* 4-pillar strip */}
-      <section className="px-6 py-16 max-w-5xl mx-auto">
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
-          {PILLARS.map((pillar) => (
-            <div key={pillar.title} className="flex flex-col items-center text-center gap-3 p-4">
-              <span className="text-3xl">{pillar.icon}</span>
-              <h3 className="text-sm font-semibold text-text-primary">{pillar.title}</h3>
-              <p className="text-xs text-text-secondary leading-relaxed">{pillar.description}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Etymology demo */}
-      <section className="px-6 py-16 max-w-5xl mx-auto">
-        <div className="text-center mb-10">
-          <h2 className="text-2xl font-bold text-text-primary">Words have roots. So does disease.</h2>
-          <p className="text-sm text-text-secondary mt-2">Every disease name tells a story. Traced breaks it down.</p>
-        </div>
+      <section className="px-6 py-12 max-w-4xl mx-auto">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {ETYMOLOGY_DEMOS.map((demo) => (
-            <div key={demo.name} className="rounded-lg border border-border-subtle bg-surface-card p-5 space-y-3">
-              <h4 className="text-sm font-semibold text-text-primary">{demo.name}</h4>
-              <div className="flex flex-wrap gap-1">
-                {demo.parts.map((part, i) => (
-                  <span key={i} className="text-xs px-2 py-1 rounded bg-accent-muted text-accent-text">
-                    {part.root} <span className="text-text-muted">= {part.meaning}</span>
-                  </span>
-                ))}
-              </div>
-              <p className="text-xs text-text-secondary italic">{demo.plain}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Feature grid */}
-      <section className="px-6 py-16 max-w-5xl mx-auto">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {FEATURES.map((f) => (
-            <div key={f.title} className="rounded-lg border border-border-subtle bg-surface-panel p-5 space-y-2">
-              <span className="text-2xl">{f.icon}</span>
-              <h3 className="text-sm font-semibold text-text-primary">{f.title}</h3>
-              <p className="text-xs text-text-secondary leading-relaxed">{f.description}</p>
+            <div
+              key={f.title}
+              className="rounded-xl p-5 space-y-2"
+              style={{
+                backgroundColor: "#FFFFFF",
+                border: "1px solid #E8E3D9",
+                borderRadius: 12,
+              }}
+            >
+              <h3
+                className="text-base font-semibold"
+                style={{ color: "#16112E", fontFamily: "var(--font-display)" }}
+              >
+                {f.title}
+              </h3>
+              <p className="text-sm leading-relaxed" style={{ color: "#5C5472" }}>
+                {f.description}
+              </p>
             </div>
           ))}
         </div>
       </section>
 
-      {/* Stats row */}
-      <section className="px-6 py-12 max-w-5xl mx-auto">
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          {STATS.map((s) => (
-            <div key={s.label} className="flex flex-col items-center gap-1 py-4">
-              <span className="text-2xl font-bold text-accent-text">{s.value}</span>
-              <span className="text-xs text-text-muted">{s.label}</span>
-            </div>
-          ))}
-        </div>
+      <section className="px-6 py-16 max-w-3xl mx-auto text-center space-y-3">
+        <p
+          className="italic text-xl"
+          style={{ color: "#5A2B94", fontFamily: "var(--font-display)" }}
+        >
+          kardia
+        </p>
+        <p className="text-[10px] uppercase tracking-[0.08em]" style={{ color: "#9B95B8" }}>
+          Greek
+        </p>
+        <p style={{ color: "#16112E" }}>
+          heart — cardiac, cardiology, cardiomyopathy all come from the same root.
+        </p>
+        <p className="text-sm italic mt-4" style={{ color: "#5C5472" }}>
+          Learn one root a day. In a year you&apos;ve learned the human body.
+        </p>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t border-border-subtle px-6 py-10 mt-8">
+      <footer className="px-6 py-10 mt-8" style={{ borderTop: "1px solid #E8E3D9" }}>
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="text-center sm:text-left">
-            <span className="text-sm font-bold text-accent-text">Traced</span>
-            <p className="text-xs text-text-muted mt-1">Anatomy-first medical learning</p>
-          </div>
+          <span className="text-sm font-bold" style={{ color: "#5A2B94" }}>
+            Traced
+          </span>
           <div className="flex gap-6">
-            <Link href="/register" className="text-xs text-text-secondary hover:text-text-primary">Get started</Link>
-            <Link href="/login" className="text-xs text-text-secondary hover:text-text-primary">Sign in</Link>
-            <Link href="/explorer" className="text-xs text-text-secondary hover:text-text-primary">Explorer</Link>
-            <Link href="/cases" className="text-xs text-text-secondary hover:text-text-primary">Cases</Link>
+            <Link href="/welcome" className="text-xs" style={{ color: "#5C5472" }}>
+              Start learning
+            </Link>
+            <Link href="/login" className="text-xs" style={{ color: "#5C5472" }}>
+              Sign in
+            </Link>
           </div>
         </div>
       </footer>
     </div>
   );
 }
-
-const ETYMOLOGY_DEMOS = [
-  {
-    name: "Cholecystitis",
-    parts: [
-      { root: "chole-", meaning: "bile" },
-      { root: "-cyst-", meaning: "bladder" },
-      { root: "-itis", meaning: "inflammation" },
-    ],
-    plain: "Inflammation of the gallbladder",
-  },
-  {
-    name: "Osteoporosis",
-    parts: [
-      { root: "osteo-", meaning: "bone" },
-      { root: "por-", meaning: "pore" },
-      { root: "-osis", meaning: "condition" },
-    ],
-    plain: "A condition of porous, weakened bones",
-  },
-  {
-    name: "Myocardial infarction",
-    parts: [
-      { root: "myo-", meaning: "muscle" },
-      { root: "cardi-", meaning: "heart" },
-      { root: "infarct-", meaning: "tissue death" },
-    ],
-    plain: "Death of heart muscle tissue — a heart attack",
-  },
-];
-
-const FEATURES = [
-  {
-    title: "Interactive Body Map",
-    icon: "\u{1FAC0}",
-    description: "Click anatomical structures on a real SVG body map. Filter by system. See what connects to what.",
-  },
-  {
-    title: "Mystery Cases",
-    icon: "\u{1F50D}",
-    description: "Clinical vignettes with clues, questions, and XP. Diagnose, reason through mechanisms, and pick the right treatment.",
-  },
-  {
-    title: "Evidence-Grounded Explanations",
-    icon: "\u{1F4C4}",
-    description: "Every explanation cites NICE guidelines, PubMed reviews, or MedlinePlus. Confidence labels tell you how strong the evidence is.",
-  },
-  {
-    title: "Progression System",
-    icon: "\u{1F4C8}",
-    description: "Earn XP, level up, unlock new body systems, and track mastery per system with detailed progress bars.",
-  },
-];
-
-const STATS = [
-  { value: "3", label: "Body systems" },
-  { value: "14", label: "Diseases" },
-  { value: "10", label: "Mystery cases" },
-  { value: "18", label: "Evidence sources" },
-];
-
-const PILLARS = [
-  {
-    title: "Explore",
-    icon: "\u{1F9EC}",
-    description: "Click the body map. Navigate anatomy systems. See every structure in context.",
-  },
-  {
-    title: "Connect",
-    icon: "\u{1F517}",
-    description: "Trace the links from structure to disease, mechanism, and treatment.",
-  },
-  {
-    title: "Play",
-    icon: "\u{1F9EA}",
-    description: "Solve mystery cases. Diagnose, reason, and treat — then earn XP.",
-  },
-  {
-    title: "Understand",
-    icon: "\u{1F4A1}",
-    description: "Read grounded explanations backed by NICE, PubMed, and MedlinePlus evidence.",
-  },
-];
