@@ -2,9 +2,11 @@ package dev.traced.core.evidence.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.traced.core.evidence.dto.CitedSourceDto;
 import dev.traced.core.evidence.dto.GroundedExplanationDto;
 import dev.traced.core.evidence.entity.CandidateClaim;
 import dev.traced.core.evidence.entity.EvidenceChunk;
+import dev.traced.core.evidence.entity.SourceDocument;
 import dev.traced.core.evidence.repository.CandidateClaimRepository;
 import dev.traced.core.evidence.repository.EvidenceChunkRepository;
 import lombok.RequiredArgsConstructor;
@@ -15,7 +17,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
 import java.time.Duration;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -132,6 +136,7 @@ public class ExplanationService {
                 .explanationText(response.path("explanation_text").asText(""))
                 .citedClaimIds(citedClaimIds)
                 .citedChunkIds(citedChunkIds)
+                .citedSources(resolveCitedSources(citedChunkIds, chunks))
                 .confidenceLabel(response.path("confidence_label").asText("UNCERTAIN"))
                 .contradictionNotice(contradictionNotice)
                 .build();
@@ -157,8 +162,36 @@ public class ExplanationService {
             .explanationText("Insufficient evidence to generate a grounded explanation.")
             .citedClaimIds(List.of())
             .citedChunkIds(List.of())
+            .citedSources(List.of())
             .confidenceLabel("UNCERTAIN")
             .build();
+    }
+
+    private List<CitedSourceDto> resolveCitedSources(List<String> citedChunkIds, List<EvidenceChunk> chunks) {
+        if (citedChunkIds == null || citedChunkIds.isEmpty() || chunks == null || chunks.isEmpty()) {
+            return List.of();
+        }
+        Set<String> citedIds = new HashSet<>(citedChunkIds);
+        Map<UUID, SourceDocument> byId = new LinkedHashMap<>();
+        for (EvidenceChunk chunk : chunks) {
+            if (!citedIds.contains(chunk.getChunkId())) continue;
+            SourceDocument doc = chunk.getSourceDocument();
+            if (doc == null) continue;
+            byId.putIfAbsent(doc.getId(), doc);
+        }
+        return byId.values().stream()
+            .map(doc -> CitedSourceDto.builder()
+                .title(doc.getTitle())
+                .sourceType(doc.getSourceType())
+                .jurisdiction(doc.getJurisdiction())
+                .freshness(formatFreshness(doc))
+                .build())
+            .collect(Collectors.toList());
+    }
+
+    private static String formatFreshness(SourceDocument doc) {
+        if (doc.getIngestedAt() == null) return null;
+        return "Updated " + doc.getIngestedAt().format(DateTimeFormatter.ofPattern("MMMM yyyy"));
     }
 
     public GroundedExplanationDto generateSpecialityExplanation(String anatomyCanonicalId, String specialityCanonicalId) {
@@ -254,6 +287,7 @@ public class ExplanationService {
                 .explanationText(response.path("explanation_text").asText(""))
                 .citedClaimIds(citedClaimIds)
                 .citedChunkIds(citedChunkIds)
+                .citedSources(resolveCitedSources(citedChunkIds, chunks))
                 .confidenceLabel(response.path("confidence_label").asText("UNCERTAIN"))
                 .contradictionNotice(contradictionNotice)
                 .build();

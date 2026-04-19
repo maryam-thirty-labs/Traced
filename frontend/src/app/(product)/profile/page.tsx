@@ -7,6 +7,10 @@ import { ResetProgressModal } from "@/features/progression/components/ResetProgr
 import { FriendsManager } from "@/features/leaderboard/components/FriendsManager";
 import { SkeletonLoader } from "@/shared/ui/SkeletonLoader";
 import { ErrorState } from "@/shared/ui/ErrorState";
+import {
+  setEvidenceModeEnabled,
+  useEvidenceMode,
+} from "@/shared/lib/preferences/evidenceMode";
 import type { UserProfileDto } from "@/features/progression/types/progress.types";
 
 const BADGES = [
@@ -32,6 +36,7 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [showResetModal, setShowResetModal] = useState(false);
+  const evidenceMode = useEvidenceMode();
 
   const fetchProfile = useCallback(() => {
     setLoading(true);
@@ -129,6 +134,19 @@ export default function ProfilePage() {
             className={`text-xs font-medium px-3 py-1 rounded transition-colors ${profile.etymologyEnabled ? "bg-green-400/10 text-green-400" : "bg-surface-elevated text-text-muted"}`}
           >
             {profile.etymologyEnabled ? "On" : "Off"}
+          </button>
+        </div>
+
+        <div className="flex items-center justify-between rounded-lg border border-border-subtle bg-surface-card p-4">
+          <div>
+            <p className="text-sm text-text-primary">Evidence Mode</p>
+            <p className="text-xs text-text-muted">Show inline citations and confidence badges</p>
+          </div>
+          <button
+            onClick={() => setEvidenceModeEnabled(!evidenceMode)}
+            className={`text-xs font-medium px-3 py-1 rounded transition-colors ${evidenceMode ? "bg-green-400/10 text-green-400" : "bg-surface-elevated text-text-muted"}`}
+          >
+            {evidenceMode ? "On" : "Off"}
           </button>
         </div>
 

@@ -1,16 +1,26 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { ChevronDown, ChevronRight } from "lucide-react";
 import { post } from "@/shared/lib/api/http";
 import { SkeletonLoader } from "@/shared/ui/SkeletonLoader";
 import { ErrorState } from "@/shared/ui/ErrorState";
 import { useSpecialityContext } from "@/features/speciality/hooks/useSpecialityContext";
 import { getSpeciality } from "@/features/speciality/lib/specialityApi";
+import { useEvidenceMode } from "@/shared/lib/preferences/evidenceMode";
+
+type CitedSource = {
+  title: string;
+  sourceType: string | null;
+  jurisdiction: string | null;
+  freshness: string | null;
+};
 
 type GroundedExplanation = {
   explanationText: string;
   citedClaimIds: string[];
   citedChunkIds: string[];
+  citedSources: CitedSource[] | null;
   confidenceLabel: string;
   contradictionNotice: string | null;
 };
@@ -32,6 +42,8 @@ export function AnatomyExplainTab({ canonicalId }: AnatomyExplainTabProps) {
   const [specialityDisplayName, setSpecialityDisplayName] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
+  const [sourcesOpen, setSourcesOpen] = useState(false);
+  const evidenceMode = useEvidenceMode();
 
   const fetchExplanation = useCallback(() => {
     setLoading(true);
@@ -55,7 +67,6 @@ export function AnatomyExplainTab({ canonicalId }: AnatomyExplainTabProps) {
       });
   }, [canonicalId, activeSpecialityId]);
 
-  // Fetch speciality display name when active
   useEffect(() => {
     if (!activeSpecialityId) {
       setSpecialityDisplayName(null);
@@ -66,7 +77,6 @@ export function AnatomyExplainTab({ canonicalId }: AnatomyExplainTabProps) {
       .catch(() => setSpecialityDisplayName(null));
   }, [activeSpecialityId]);
 
-  // Refetch on canonicalId or speciality change
   useEffect(() => {
     fetchExplanation();
   }, [fetchExplanation]);
@@ -76,10 +86,11 @@ export function AnatomyExplainTab({ canonicalId }: AnatomyExplainTabProps) {
   if (!explanation) return null;
 
   const isUncertain = explanation.confidenceLabel === "UNCERTAIN";
+  const sources = explanation.citedSources ?? [];
+  const sourceCount = sources.length || explanation.citedChunkIds.length;
 
   return (
     <div className="flex flex-col gap-3 px-4 py-3">
-      {/* Speciality badge */}
       {specialityDisplayName && (
         <div className="rounded-lg border border-accent-border bg-accent-muted px-3 py-2">
           <p className="text-[10px] text-text-muted">Through the lens of</p>
@@ -87,17 +98,22 @@ export function AnatomyExplainTab({ canonicalId }: AnatomyExplainTabProps) {
         </div>
       )}
 
-      {/* Confidence badge */}
-      <div className="flex items-center gap-2">
-        <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${CONFIDENCE_STYLES[explanation.confidenceLabel] ?? ""}`}>
-          {explanation.confidenceLabel}
-        </span>
-        {explanation.citedClaimIds.length > 0 && (
-          <span className="text-[10px] text-text-muted">
-            {explanation.citedClaimIds.length} source{explanation.citedClaimIds.length !== 1 ? "s" : ""} cited
+      {evidenceMode && (
+        <div className="flex items-center gap-2">
+          <span
+            className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${
+              CONFIDENCE_STYLES[explanation.confidenceLabel] ?? ""
+            }`}
+          >
+            {explanation.confidenceLabel}
           </span>
-        )}
-      </div>
+          {sourceCount > 0 && (
+            <span className="text-[10px] text-text-muted">
+              {sourceCount} source{sourceCount !== 1 ? "s" : ""} cited
+            </span>
+          )}
+        </div>
+      )}
 
       {isUncertain && (
         <div className="rounded-lg border border-red-400/30 bg-red-400/5 p-3">
@@ -119,7 +135,50 @@ export function AnatomyExplainTab({ canonicalId }: AnatomyExplainTabProps) {
         {explanation.explanationText}
       </p>
 
-      {explanation.citedClaimIds.length > 0 && (
+      <p className="text-[10px] text-text-muted italic mt-1">
+        This is not medical advice.
+      </p>
+
+      {sourceCount > 0 && (
+        <div className="pt-1">
+          <button
+            type="button"
+            onClick={() => setSourcesOpen((v) => !v)}
+            className="inline-flex items-center gap-1 text-[11px] font-medium uppercase tracking-wider text-text-muted hover:text-text-secondary"
+            aria-expanded={sourcesOpen}
+          >
+            {sourcesOpen ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+            Sources ({sourceCount})
+          </button>
+          {sourcesOpen && (
+            <ul className="mt-2 flex flex-col gap-1.5">
+              {sources.length > 0
+                ? sources.map((s, i) => (
+                    <li
+                      key={`${s.title}-${i}`}
+                      className="text-xs text-text-secondary border-l-2 border-border-subtle pl-2"
+                    >
+                      <span className="font-medium text-text-primary">{s.title}</span>
+                      {s.sourceType && (
+                        <span className="text-text-muted"> · {s.sourceType}</span>
+                      )}
+                      {s.freshness && <span className="text-text-muted"> · {s.freshness}</span>}
+                    </li>
+                  ))
+                : explanation.citedChunkIds.map((id) => (
+                    <li
+                      key={id}
+                      className="text-[11px] font-mono text-text-muted border-l-2 border-border-subtle pl-2"
+                    >
+                      {id}
+                    </li>
+                  ))}
+            </ul>
+          )}
+        </div>
+      )}
+
+      {evidenceMode && explanation.citedClaimIds.length > 0 && (
         <div className="flex flex-wrap gap-1 pt-1">
           {explanation.citedClaimIds.map((id) => (
             <span
