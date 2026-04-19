@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { AnatomySystem } from "../types/anatomy.types";
 import {
   resolveCanonicalId,
@@ -37,6 +37,7 @@ export function AnatomogramCanvas({
 }: AnatomogramCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);
+  const [svgLoaded, setSvgLoaded] = useState(false);
 
   const supportedIds = useMemo(
     () => getSupportedAnatomogramIds(selectedSystem),
@@ -83,6 +84,10 @@ export function AnatomogramCanvas({
         container.innerHTML = "";
         container.appendChild(svg);
         svgRef.current = svg;
+        setSvgLoaded(true);
+      })
+      .catch(() => {
+        if (!cancelled) setSvgLoaded(true);
       });
 
     return () => {
@@ -182,9 +187,20 @@ export function AnatomogramCanvas({
   ]);
 
   return (
-    <div
-      ref={containerRef}
-      className="flex items-center justify-center h-full [&_svg]:mx-auto"
-    />
+    <div className="relative h-full">
+      <div
+        ref={containerRef}
+        className="flex items-center justify-center h-full [&_svg]:mx-auto"
+      />
+      {!svgLoaded && (
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div
+            className="w-48 h-96 rounded-3xl animate-pulse"
+            style={{ backgroundColor: "rgba(122,110,93,0.12)" }}
+            aria-label="Loading body silhouette"
+          />
+        </div>
+      )}
+    </div>
   );
 }
