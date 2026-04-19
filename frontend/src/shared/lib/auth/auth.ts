@@ -1,7 +1,8 @@
-import { post } from "@/shared/lib/api/http";
+import { get, post } from "@/shared/lib/api/http";
 
 const TOKEN_KEY = "traced_token";
 const USER_KEY = "traced_user";
+const ME_CACHE_KEY = "traced_me";
 
 type AuthResponse = {
   token: string;
@@ -12,6 +13,14 @@ type AuthResponse = {
 type StoredUser = {
   userId: string;
   displayName: string;
+};
+
+export type MeDto = {
+  userId: string;
+  displayName: string;
+  email: string;
+  learning_activated: boolean;
+  account_mode: string;
 };
 
 export async function signIn(email: string, password: string): Promise<AuthResponse> {
@@ -31,6 +40,28 @@ export async function register(email: string, password: string, displayName: str
 export function signOut(): void {
   localStorage.removeItem(TOKEN_KEY);
   localStorage.removeItem(USER_KEY);
+  localStorage.removeItem(ME_CACHE_KEY);
+}
+
+export async function fetchMe(): Promise<MeDto> {
+  const me = await get<MeDto>("/api/auth/me");
+  try {
+    localStorage.setItem(ME_CACHE_KEY, JSON.stringify(me));
+  } catch {
+    // localStorage may be unavailable (private mode, quota)
+  }
+  return me;
+}
+
+export function getCachedMe(): MeDto | null {
+  if (typeof window === "undefined") return null;
+  const raw = localStorage.getItem(ME_CACHE_KEY);
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw) as MeDto;
+  } catch {
+    return null;
+  }
 }
 
 export function getToken(): string | null {

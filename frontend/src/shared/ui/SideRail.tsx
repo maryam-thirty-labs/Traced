@@ -2,24 +2,31 @@
 
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { Compass, BookOpen, BarChart3, User, MessageSquare, Swords } from "lucide-react";
+import { Compass, Calendar, Sprout, User } from "lucide-react";
+import { useMe } from "@/shared/lib/auth/MeContext";
 
-const navItems = [
-  { href: "/explorer", label: "Explorer", icon: Compass },
-  { href: "/cases", label: "Cases", icon: BookOpen },
-  { href: "/multiplayer", label: "Multiplayer", icon: Swords },
-  { href: "/community", label: "Community", icon: MessageSquare },
-  { href: "/progress", label: "Progress", icon: BarChart3 },
+type NavItem = { href: string; label: string; icon: typeof Compass };
+
+const EXPLORER_ITEM: NavItem = { href: "/explorer", label: "Explorer", icon: Compass };
+
+const ACTIVATED_ITEMS: readonly NavItem[] = [
+  EXPLORER_ITEM,
+  { href: "/today", label: "Today", icon: Calendar },
+  { href: "/etymology", label: "Roots", icon: Sprout },
   { href: "/profile", label: "Profile", icon: User },
 ] as const;
 
 export function SideRail() {
   const pathname = usePathname();
+  const { me } = useMe();
+
+  const activated = me?.learning_activated === true;
+  const items = activated ? ACTIVATED_ITEMS : [EXPLORER_ITEM];
 
   return (
     <nav className="flex h-full w-[52px] flex-col items-center border-r border-border-default bg-surface-panel py-4 gap-6">
       <Link
-        href="/explorer"
+        href={activated ? "/today" : "/explorer"}
         className="text-xl font-bold text-accent-text"
         aria-label="Traced home"
       >
@@ -27,7 +34,7 @@ export function SideRail() {
       </Link>
 
       <div className="flex flex-col items-center gap-4 mt-2">
-        {navItems.map(({ href, label, icon: Icon }) => {
+        {items.map(({ href, label, icon: Icon }) => {
           const isActive = pathname.startsWith(href);
           return (
             <Link

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { signIn } from "@/shared/lib/auth/auth";
+import { fetchMe, signIn } from "@/shared/lib/auth/auth";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -19,7 +19,8 @@ export default function LoginPage() {
 
     try {
       await signIn(email, password);
-      router.push("/explorer");
+      const me = await fetchMe().catch(() => null);
+      router.push(me?.learning_activated ? "/today" : "/explorer");
     } catch {
       setError("Invalid email or password");
     } finally {
