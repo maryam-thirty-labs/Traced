@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Lock, Search } from "lucide-react";
+import { Lock, Search, Share2 } from "lucide-react";
 import { getGarden } from "@/features/etymology/lib/etymologyApi";
 import { SkeletonLoader } from "@/shared/ui/SkeletonLoader";
 import { ErrorState } from "@/shared/ui/ErrorState";
@@ -157,6 +157,24 @@ export default function EtymologyGardenPage() {
   );
 }
 
+async function shareRoot(entry: EtymologyEntry) {
+  const text = `"${entry.root}" — ${entry.origin ?? ""} for "${entry.meaning ?? ""}". Learn more on Traced.`;
+  const nav = navigator as Navigator & { share?: (d: ShareData) => Promise<void> };
+  if (nav.share) {
+    try {
+      await nav.share({ title: "Traced etymology", text });
+      return;
+    } catch {
+      // fall through
+    }
+  }
+  try {
+    await navigator.clipboard.writeText(text);
+  } catch {
+    // no-op
+  }
+}
+
 function RootDetailDrawer({ entry, onClose }: { entry: EtymologyEntry; onClose: () => void }) {
   return (
     <div
@@ -167,39 +185,53 @@ function RootDetailDrawer({ entry, onClose }: { entry: EtymologyEntry; onClose: 
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="max-w-md w-full rounded-xl border border-border-default bg-surface-card p-6 space-y-3"
+        className="max-w-md w-full rounded-xl border border-border-default bg-surface-card p-6 space-y-4"
       >
         {entry.collected ? (
           <>
-            <div
-              className="text-4xl italic text-accent-text"
-              style={{ fontFamily: "var(--font-display)" }}
-            >
-              {entry.root}
-            </div>
-            {entry.origin && (
-              <div className="text-[10px] font-semibold uppercase tracking-wider text-text-muted">
-                {entry.origin}
+            <div className="space-y-1">
+              <div
+                className="text-4xl italic text-accent-text"
+                style={{ fontFamily: "var(--font-display)" }}
+              >
+                {entry.root}
               </div>
-            )}
+              {entry.origin && (
+                <div className="inline-block text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full border border-border-default bg-surface-elevated text-text-secondary">
+                  {entry.origin}
+                </div>
+              )}
+            </div>
             {entry.meaning && (
-              <p className="text-sm text-text-primary">{entry.meaning}</p>
+              <p className="text-sm text-text-primary leading-relaxed">{entry.meaning}</p>
             )}
             {entry.exampleUsage && (
               <p className="text-xs text-text-secondary italic">{entry.exampleUsage}</p>
             )}
             {entry.exampleStructures && entry.exampleStructures.length > 0 && (
-              <div className="flex flex-wrap gap-1">
-                {entry.exampleStructures.map((s) => (
-                  <span
-                    key={s}
-                    className="text-[10px] px-2 py-0.5 rounded bg-surface-elevated text-text-secondary"
-                  >
-                    {s}
-                  </span>
-                ))}
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-text-muted mb-1">
+                  Structures that use this root
+                </p>
+                <div className="flex flex-wrap gap-1">
+                  {entry.exampleStructures.map((s) => (
+                    <span
+                      key={s}
+                      className="text-[10px] px-2 py-0.5 rounded bg-surface-elevated text-text-secondary"
+                    >
+                      {s}
+                    </span>
+                  ))}
+                </div>
               </div>
             )}
+            <button
+              onClick={() => shareRoot(entry)}
+              className="inline-flex items-center gap-2 px-4 py-2 text-xs font-medium rounded-lg border border-accent-border bg-accent-muted text-accent-text hover:bg-accent hover:text-white transition-colors"
+            >
+              <Share2 size={12} />
+              Share this root
+            </button>
           </>
         ) : (
           <p className="text-sm text-text-secondary">
