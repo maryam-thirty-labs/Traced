@@ -1,8 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Flame, Share2 } from "lucide-react";
+import { shareOrDownloadCard } from "@/features/etymology/lib/shareCard";
+import type { EtymologyEntry } from "@/features/etymology/types/etymology.types";
 import type { LessonCompletionDto, LessonDto } from "../types/lesson.types";
 
 const AHA_FACTS: Record<string, string> = {
@@ -44,11 +46,8 @@ function useCountUp(target: number, durationMs = 900) {
   return value;
 }
 
-async function share(text: string) {
-  const shareData: ShareData = {
-    title: "Traced",
-    text,
-  };
+async function sharePlainText(text: string) {
+  const shareData: ShareData = { title: "Traced", text };
   const nav = navigator as Navigator & { share?: (d: ShareData) => Promise<void> };
   if (nav.share) {
     try {
@@ -65,6 +64,14 @@ async function share(text: string) {
   }
 }
 
+async function shareLessonCard(entry: EtymologyEntry, fallbackText: string) {
+  try {
+    await shareOrDownloadCard(entry);
+  } catch {
+    await sharePlainText(fallbackText);
+  }
+}
+
 export function AhaPhase({ lesson, completion }: Props) {
   const xp = useCountUp(completion?.xpAwarded ?? 0);
   const explore = lesson.explore;
@@ -74,6 +81,22 @@ export function AhaPhase({ lesson, completion }: Props) {
   const shareText = explore
     ? `Did you know? "${explore.displayName}" I just learned its etymology on Traced.`
     : "I just completed today's lesson on Traced.";
+
+  // Pre-build a lightweight EtymologyEntry for the share card. Origin / meaning
+  // stay null until the lesson generator (Sprint 8+) wires real root metadata.
+  const shareEntry = useMemo<EtymologyEntry | null>(() => {
+    if (!explore || !explore.etymologyPreviewRoot) return null;
+    return {
+      id: explore.etymologyRootId ?? explore.structureId,
+      root: explore.etymologyPreviewRoot,
+      origin: null,
+      meaning: null,
+      exampleStructures: [explore.displayName],
+      exampleUsage: null,
+      collected: true,
+      collectedAt: null,
+    };
+  }, [explore]);
 
   return (
     <div className="max-w-xl mx-auto px-6 py-10 space-y-8 text-center">
@@ -110,7 +133,7 @@ export function AhaPhase({ lesson, completion }: Props) {
       )}
 
       <button
-        onClick={() => share(shareText)}
+        onClick={() => (shareEntry ? shareLessonCard(shareEntry, shareText) : sharePlainText(shareText))}
         className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium rounded-lg border border-border-default bg-surface-card text-text-primary hover:bg-surface-elevated transition-colors"
       >
         <Share2 size={14} />
