@@ -6,6 +6,7 @@ import { Flame } from "lucide-react";
 import { completeTodayLesson, getTodayLesson } from "@/features/lesson/lib/lessonApi";
 import { RetrievalPhase } from "@/features/lesson/components/RetrievalPhase";
 import { ExplorationPhase } from "@/features/lesson/components/ExplorationPhase";
+import { AhaPhase } from "@/features/lesson/components/AhaPhase";
 import { SkeletonLoader } from "@/shared/ui/SkeletonLoader";
 import { ErrorState } from "@/shared/ui/ErrorState";
 import type {
@@ -93,23 +94,5 @@ export default function LessonPage() {
   if (phase === "exploration") {
     return <ExplorationPhase lesson={lesson} onDone={handleExplorationDone} />;
   }
-  return <AhaPhasePlaceholder completion={completion} />;
-}
-
-// Aha phase placeholder — Sprint 13 fleshes out with share card and animations.
-
-function AhaPhasePlaceholder({ completion }: { completion: LessonCompletionDto | null }) {
-  return (
-    <div className="max-w-md mx-auto px-6 py-16 text-center space-y-6">
-      <h1 className="text-3xl font-bold text-accent-text">
-        +{completion?.xpAwarded ?? 0} XP
-      </h1>
-      <p className="text-sm text-text-secondary">
-        Day {completion?.streakDays ?? 1} streak.
-      </p>
-      <Link href="/today" className="inline-block text-sm text-accent-text hover:underline">
-        Done for today
-      </Link>
-    </div>
-  );
+  return <AhaPhase lesson={lesson} completion={completion} />;
 }
