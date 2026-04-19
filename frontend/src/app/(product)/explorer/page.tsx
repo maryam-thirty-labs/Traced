@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useAnatomySelection } from "@/features/anatomy/hooks/useAnatomySelection";
 import { AnatomogramCanvas } from "@/features/anatomy/components/AnatomogramCanvas";
 import { AnatomyDetailDrawer } from "@/features/anatomy/components/AnatomyDetailDrawer";
@@ -13,8 +14,21 @@ import {
   markExplorerOnboardingDismissed,
 } from "@/features/anatomy/components/ExplorerOnboarding";
 import { ExplorerSearchBar } from "@/features/anatomy/components/ExplorerSearchBar";
+import { SystemTiles } from "@/features/anatomy/components/SystemTiles";
 import { listKnownStructures } from "@/features/anatomy/lib/anatomogramAdapter";
 import { useMe } from "@/shared/lib/auth/MeContext";
+import type { AnatomySystem } from "@/features/anatomy/types/anatomy.types";
+
+const KNOWN_SYSTEMS: AnatomySystem[] = [
+  "cardiovascular", "respiratory", "nervous", "digestive",
+  "skeletal", "muscular", "vascular",
+];
+
+function deriveAnatomySystem(systemName: string): AnatomySystem | null {
+  const lower = systemName.toLowerCase();
+  const match = KNOWN_SYSTEMS.find((s) => lower.startsWith(s.slice(0, 5)));
+  return match ?? null;
+}
 
 const HEART_CANONICAL_ID = "ANAT_HEART_001";
 const HEART_ANATOMOGRAM_ID = "UBERON_0000948";
@@ -32,6 +46,8 @@ export default function ExplorerPage() {
 
   const { activeSpecialityId } = useSpecialityContext();
   const { me } = useMe();
+  const searchParams = useSearchParams();
+  const regionalMode = searchParams.get("mode") === "regional";
   const [focusCanonicalIds, setFocusCanonicalIds] = useState<Set<string>>(new Set());
   const [shouldPulseHeart, setShouldPulseHeart] = useState(false);
   const [illuminated] = useState<Set<string>>(() => {
@@ -121,6 +137,24 @@ export default function ExplorerPage() {
         active={!activated}
         onFallbackSelectHeart={handleFallbackHeart}
       />
+
+      {!selectedCanonicalId && (
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 w-[min(720px,90vw)]">
+          <SystemTiles
+            onSelect={(sys) => {
+              const key = deriveAnatomySystem(sys.name);
+              if (key) selectSystem(key);
+            }}
+            activeCanonicalId={null}
+          />
+        </div>
+      )}
+
+      {regionalMode && (
+        <div className="absolute top-3 left-1/2 -translate-x-1/2 z-10 px-3 py-1 rounded-full bg-surface-card border border-border-default text-[10px] font-semibold uppercase tracking-wider text-text-secondary">
+          Regional view
+        </div>
+      )}
 
       {selectedCanonicalId && (
         <AnatomyDetailDrawer
