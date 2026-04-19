@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { Flame } from "lucide-react";
 import { completeTodayLesson, getTodayLesson } from "@/features/lesson/lib/lessonApi";
+import { RetrievalPhase } from "@/features/lesson/components/RetrievalPhase";
 import { SkeletonLoader } from "@/shared/ui/SkeletonLoader";
 import { ErrorState } from "@/shared/ui/ErrorState";
 import type {
@@ -86,7 +87,7 @@ export default function LessonPage() {
   }
 
   if (phase === "retrieval") {
-    return <RetrievalPhasePlaceholder lesson={lesson} onDone={handleRetrievalDone} />;
+    return <RetrievalPhase lesson={lesson} onDone={handleRetrievalDone} />;
   }
   if (phase === "exploration") {
     return <ExplorationPhasePlaceholder lesson={lesson} onDone={handleExplorationDone} />;
@@ -94,39 +95,7 @@ export default function LessonPage() {
   return <AhaPhasePlaceholder completion={completion} />;
 }
 
-// Placeholder components — Sprint 11/12/13 flesh these out with real UI.
-
-function RetrievalPhasePlaceholder({
-  lesson,
-  onDone,
-}: {
-  lesson: LessonDto;
-  onDone: (answers: RetrievalAnswer[]) => void;
-}) {
-  return (
-    <div className="max-w-md mx-auto px-6 py-8 space-y-4">
-      <p className="text-xs uppercase tracking-wider text-text-muted">
-        Retrieval · {lesson.retrieval.length} to review
-      </p>
-      <p className="text-sm text-text-secondary">
-        (Sprint 11 renders the retrieval quiz here.)
-      </p>
-      <button
-        onClick={() =>
-          onDone(
-            lesson.retrieval.map((r) => ({
-              structureId: r.structureId,
-              correct: true,
-            })),
-          )
-        }
-        className="px-4 py-2 text-sm font-medium rounded-lg bg-accent text-white"
-      >
-        Skip to exploration
-      </button>
-    </div>
-  );
-}
+// Placeholder components — Sprint 12/13 flesh these out with real UI.
 
 function ExplorationPhasePlaceholder({
   lesson,
