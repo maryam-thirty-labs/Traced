@@ -285,10 +285,118 @@ public class LearningLoopService {
         return max;
     }
 
+    public record RetrievalAnswer(UUID structureId, boolean correct) {}
+
     @Transactional
-    public LessonCompletionDto completeTodayLesson(UUID userId) {
-        // Sprint 9 implements the completion flow.
-        throw new UnsupportedOperationException("Implemented in Sprint 9");
+    public LessonCompletionDto completeTodayLesson(UUID userId, List<RetrievalAnswer> answers) {
+        LocalDate today = LocalDate.now();
+        DailyLessonProgress lesson = lessonRepository.findByUserIdAndLessonDate(userId, today)
+            .orElseThrow(() -> new IllegalStateException("No lesson for today; call GET /api/lessons/today first"));
+
+        UserProfile profile = userProfileRepository.findByUserId(userId)
+            .orElseThrow(() -> new IllegalStateException("UserProfile missing for user " + userId));
+
+        // Idempotent short-circuit.
+        if (Boolean.TRUE.equals(lesson.getCompleted())) {
+            return LessonCompletionDto.builder()
+                .xpAwarded(lesson.getXpAwarded() == null ? 0 : lesson.getXpAwarded())
+                .newXp(profile.getTotalXp() == null ? 0 : profile.getTotalXp())
+                .streakDays(profile.getCurrentStreak() == null ? 0 : profile.getCurrentStreak())
+                .etymologyRootId(lesson.getEtymologyRootId())
+                .onboardingCompleted(Boolean.TRUE.equals(profile.getLearningActivated()))
+                .build();
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+
+        // Index answers by structureId.
+        Map<UUID, Boolean> answerByStructure = new HashMap<>();
+        if (answers != null) {
+            for (RetrievalAnswer a : answers) answerByStructure.put(a.structureId(), a.correct());
+        }
+
+        // Write retrieval outcomes.
+        List<DailyLessonRetrievalItem> items =
+            retrievalItemRepository.findByLessonIdOrderByDisplayOrderAsc(lesson.getId());
+        int correctCount = 0;
+        for (DailyLessonRetrievalItem item : items) {
+            Boolean correct = answerByStructure.get(item.getStructureId());
+            if (correct == null) continue;
+            item.setAnsweredCorrectly(correct);
+            item.setAnsweredAt(now);
+            retrievalItemRepository.save(item);
+            if (correct) correctCount++;
+
+            // Update anatomy_structure_progress for this retrieval structure.
+            AnatomyStructureProgress progress = structureProgressRepository
+                .findByUserIdAndStructureId(userId, item.getStructureId())
+                .orElseGet(() -> AnatomyStructureProgress.builder()
+                    .userId(userId)
+                    .structureId(item.getStructureId())
+                    .firstSeenAt(now)
+                    .firstSource("LESSON")
+                    .build());
+            progress.setLastReviewedAt(now);
+            progress.setReviewCount(progress.getReviewCount() == null ? 1 : progress.getReviewCount() + 1);
+            structureProgressRepository.save(progress);
+        }
+
+        // Mark explore structure Seen (but not Explored — etymology dwell is separate).
+        UUID exploreId = lesson.getStructureExplored();
+        if (exploreId != null) {
+            AnatomyStructureProgress progress = structureProgressRepository
+                .findByUserIdAndStructureId(userId, exploreId)
+                .orElseGet(() -> AnatomyStructureProgress.builder()
+                    .userId(userId)
+                    .structureId(exploreId)
+                    .firstSeenAt(now)
+                    .firstSource("LESSON")
+                    .build());
+            structureProgressRepository.save(progress);
+        }
+
+        int xpAwarded = BASE_LESSON_XP
+            + correctCount * XP_PER_CORRECT_RETRIEVAL
+            + (exploreId != null ? EXPLORE_XP : 0);
+
+        int existingXp = profile.getTotalXp() == null ? 0 : profile.getTotalXp();
+        profile.setTotalXp(existingXp + xpAwarded);
+
+        // Streak update (simple derived model — Sprint 26 hardens).
+        LocalDate lastActive = profile.getLastActiveDate();
+        int newStreak;
+        if (lastActive == null) {
+            newStreak = 1;
+        } else if (lastActive.equals(today)) {
+            newStreak = profile.getCurrentStreak() == null ? 1 : profile.getCurrentStreak();
+        } else if (lastActive.plusDays(1).equals(today)) {
+            newStreak = (profile.getCurrentStreak() == null ? 0 : profile.getCurrentStreak()) + 1;
+        } else {
+            newStreak = 1;
+        }
+        profile.setCurrentStreak(newStreak);
+        profile.setLastActiveDate(today);
+
+        // First-ever lesson completion activates progressive home.
+        boolean firstEver = !Boolean.TRUE.equals(profile.getLearningActivated());
+        if (firstEver) {
+            profile.setLearningActivated(true);
+        }
+
+        userProfileRepository.save(profile);
+
+        lesson.setCompleted(true);
+        lesson.setCompletedAt(now);
+        lesson.setXpAwarded(xpAwarded);
+        lessonRepository.save(lesson);
+
+        return LessonCompletionDto.builder()
+            .xpAwarded(xpAwarded)
+            .newXp(profile.getTotalXp())
+            .streakDays(newStreak)
+            .etymologyRootId(lesson.getEtymologyRootId())
+            .onboardingCompleted(firstEver)
+            .build();
     }
 
     @Transactional
