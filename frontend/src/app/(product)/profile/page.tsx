@@ -11,6 +11,7 @@ import {
   setEvidenceModeEnabled,
   useEvidenceMode,
 } from "@/shared/lib/preferences/evidenceMode";
+import { NotificationOptIn } from "@/features/notifications/components/NotificationOptIn";
 import type { UserProfileDto } from "@/features/progression/types/progress.types";
 
 const BADGES = [
@@ -37,6 +38,29 @@ export default function ProfilePage() {
   const [error, setError] = useState(false);
   const [showResetModal, setShowResetModal] = useState(false);
   const evidenceMode = useEvidenceMode();
+  const [notifState, setNotifState] = useState<{ enabled: boolean; reminderTime: string | null }>(
+    () => {
+      if (typeof window === "undefined") return { enabled: false, reminderTime: null };
+      return {
+        enabled: localStorage.getItem("traced_notifications_enabled") === "true",
+        reminderTime: localStorage.getItem("traced_reminder_time"),
+      };
+    },
+  );
+
+  const handleNotifChange = (next: { enabled: boolean; reminderTime: string | null }) => {
+    setNotifState(next);
+    try {
+      localStorage.setItem("traced_notifications_enabled", String(next.enabled));
+      if (next.reminderTime) {
+        localStorage.setItem("traced_reminder_time", next.reminderTime);
+      } else {
+        localStorage.removeItem("traced_reminder_time");
+      }
+    } catch {
+      // ignore
+    }
+  };
 
   const fetchProfile = useCallback(() => {
     setLoading(true);
@@ -218,6 +242,13 @@ export default function ProfilePage() {
           })}
         </div>
       </div>
+
+      {/* Notifications */}
+      <NotificationOptIn
+        enabled={notifState.enabled}
+        reminderTime={notifState.reminderTime}
+        onChange={handleNotifChange}
+      />
 
       {/* Friends */}
       <FriendsManager />
