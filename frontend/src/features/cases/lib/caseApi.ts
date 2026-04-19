@@ -20,6 +20,17 @@ export async function listCases(page = 0): Promise<CaseBrowsePage> {
   return get<CaseBrowsePage>(`/api/cases?page=${page}&size=20`);
 }
 
+export type WeeklyCaseResponse = {
+  available: boolean;
+  streakRequired: number;
+  currentStreak: number;
+  caseDetail: CaseDetailDto | null;
+};
+
+export async function getWeeklyCase(): Promise<WeeklyCaseResponse> {
+  return get<WeeklyCaseResponse>("/api/cases/weekly");
+}
+
 export async function submitCase(
   caseId: string,
   answers: Array<{ questionId: string; selectedOptionKey: string }>,

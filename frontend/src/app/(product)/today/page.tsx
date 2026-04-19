@@ -135,12 +135,12 @@ export default function TodayPage() {
           A clinical vignette to diagnose. Identify the affected structure from symptoms.
         </p>
         {caseUnlocked ? (
-          <button
-            onClick={() => showToast("Mystery cases arrive in Phase 4")}
-            className="mt-2 text-xs font-medium text-accent-text"
+          <Link
+            href="/cases/weekly"
+            className="mt-2 inline-block text-xs font-medium text-accent-text hover:underline"
           >
-            Coming soon →
-          </button>
+            Open this week&apos;s case →
+          </Link>
         ) : (
           <div className="mt-2 flex items-center gap-1.5 text-xs text-text-muted">
             <Lock size={12} />
