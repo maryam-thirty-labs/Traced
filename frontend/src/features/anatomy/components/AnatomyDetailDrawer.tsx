@@ -12,8 +12,9 @@ import { AnatomyNamesTab } from "./AnatomyNamesTab";
 import { AnatomyMechanismsTab } from "./AnatomyMechanismsTab";
 import { AnatomyCasesTab } from "./AnatomyCasesTab";
 import { AnatomyExplainTab } from "./AnatomyExplainTab";
+import { AnatomyEtymologyTab } from "./AnatomyEtymologyTab";
 
-const TABS = ["Diseases", "Names", "Mechanisms", "Cases", "Explain"] as const;
+const TABS = ["Etymology", "Diseases", "Names", "Mechanisms", "Cases", "Explain"] as const;
 
 type AnatomyDetailDrawerProps = {
   canonicalId: string;
@@ -81,6 +82,7 @@ export function AnatomyDetailDrawer({
 
           <TabGroup tabs={[...TABS]} activeTab={activeTab} onTabChange={setActiveTab} />
 
+          {activeTab === "Etymology" && <AnatomyEtymologyTab />}
           {activeTab === "Diseases" && <AnatomyDiseasesTab diseases={part.diseases} />}
           {activeTab === "Names" && <AnatomyNamesTab aliases={part.aliases} />}
           {activeTab === "Mechanisms" && <AnatomyMechanismsTab mechanisms={part.mechanisms} />}
