@@ -72,5 +72,14 @@ public class UserProfile {
     @Builder.Default
     private Boolean notificationsEnabled = false;
 
+    /**
+     * Audience/voice profile for AdaptiveExplainer.
+     * Values: curious_adult | med_student | fitness | health_scare.
+     * DB-level CHECK constraint is authoritative; keep the Java side aligned.
+     */
+    @Column(name = "background", nullable = false, length = 20)
+    @Builder.Default
+    private String background = "curious_adult";
+
     // No currentLevel column — derived by LevelService, never persisted
 }

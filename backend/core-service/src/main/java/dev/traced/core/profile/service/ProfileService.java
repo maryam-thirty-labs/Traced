@@ -107,6 +107,9 @@ public class ProfileService {
         if (request.university() != null) {
             profile.setUniversity(request.university());
         }
+        if (request.background() != null) {
+            profile.setBackground(request.background());
+        }
         userProfileRepository.save(profile);
     }
 

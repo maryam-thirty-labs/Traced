@@ -15,12 +15,19 @@ type StoredUser = {
   displayName: string;
 };
 
+export type UserBackground =
+  | "curious_adult"
+  | "med_student"
+  | "fitness"
+  | "health_scare";
+
 export type MeDto = {
   userId: string;
   displayName: string;
   email: string;
   learning_activated: boolean;
   account_mode: string;
+  background: UserBackground;
 };
 
 export async function signIn(email: string, password: string): Promise<AuthResponse> {

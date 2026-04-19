@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { post } from "@/shared/lib/api/http";
 import { SkeletonLoader } from "@/shared/ui/SkeletonLoader";
@@ -8,6 +8,8 @@ import { ErrorState } from "@/shared/ui/ErrorState";
 import { useSpecialityContext } from "@/features/speciality/hooks/useSpecialityContext";
 import { getSpeciality } from "@/features/speciality/lib/specialityApi";
 import { useEvidenceMode } from "@/shared/lib/preferences/evidenceMode";
+import { useMe } from "@/shared/lib/auth/MeContext";
+import type { UserBackground } from "@/shared/lib/auth/auth";
 
 type CitedSource = {
   title: string;
@@ -16,6 +18,7 @@ type CitedSource = {
   freshness: string | null;
 };
 
+// Raw clinical shape (Evidence Mode / speciality).
 type GroundedExplanation = {
   explanationText: string;
   citedClaimIds: string[];
@@ -25,6 +28,18 @@ type GroundedExplanation = {
   contradictionNotice: string | null;
 };
 
+// Adaptive shape (Story Mode).
+type AdaptiveExplanation = {
+  adaptedText: string;
+  ahaFact: string | null;
+  citations: CitedSource[] | null;
+  userBackgroundApplied: string;
+};
+
+type Display =
+  | { mode: "adaptive"; adaptive: AdaptiveExplanation }
+  | { mode: "grounded"; grounded: GroundedExplanation };
+
 const CONFIDENCE_STYLES: Record<string, string> = {
   HIGH: "text-green-400 bg-green-400/10",
   MEDIUM: "text-amber-400 bg-amber-400/10",
@@ -32,40 +47,56 @@ const CONFIDENCE_STYLES: Record<string, string> = {
   UNCERTAIN: "text-red-400 bg-red-400/10",
 };
 
+const DEFAULT_BACKGROUND: UserBackground = "curious_adult";
+
 type AnatomyExplainTabProps = {
   canonicalId: string;
 };
 
 export function AnatomyExplainTab({ canonicalId }: AnatomyExplainTabProps) {
   const { activeSpecialityId } = useSpecialityContext();
-  const [explanation, setExplanation] = useState<GroundedExplanation | null>(null);
+  const { me } = useMe();
+  const [display, setDisplay] = useState<Display | null>(null);
   const [specialityDisplayName, setSpecialityDisplayName] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
   const [sourcesOpen, setSourcesOpen] = useState(false);
   const evidenceMode = useEvidenceMode();
 
+  const userBackground: UserBackground = me?.background ?? DEFAULT_BACKGROUND;
+
+  // Adaptive (Story Mode) is used when there's no speciality overlay AND
+  // Evidence Mode is off. Otherwise keep the clinical/grounded path so
+  // confidence, contradictions, and raw claims are visible.
+  const useAdaptive = !activeSpecialityId && !evidenceMode;
+
   const fetchExplanation = useCallback(() => {
     setLoading(true);
     setError(false);
 
-    const request = activeSpecialityId
-      ? post<GroundedExplanation>("/api/explanations/speciality", {
-          anatomyPartCanonicalId: canonicalId,
-          specialityCanonicalId: activeSpecialityId,
-        })
-      : post<GroundedExplanation>("/api/explanations/anatomy", { canonicalId });
+    const request: Promise<Display> = useAdaptive
+      ? post<AdaptiveExplanation>("/api/intelligence/explanations/adaptive", {
+          structureId: canonicalId,
+          userBackground,
+        }).then((data) => ({ mode: "adaptive", adaptive: data }))
+      : activeSpecialityId
+        ? post<GroundedExplanation>("/api/explanations/speciality", {
+            anatomyPartCanonicalId: canonicalId,
+            specialityCanonicalId: activeSpecialityId,
+          }).then((data) => ({ mode: "grounded", grounded: data }))
+        : post<GroundedExplanation>("/api/explanations/anatomy", { canonicalId })
+            .then((data) => ({ mode: "grounded", grounded: data }));
 
     request
-      .then((data) => {
-        setExplanation(data);
+      .then((d) => {
+        setDisplay(d);
         setLoading(false);
       })
       .catch(() => {
         setError(true);
         setLoading(false);
       });
-  }, [canonicalId, activeSpecialityId]);
+  }, [canonicalId, activeSpecialityId, useAdaptive, userBackground]);
 
   useEffect(() => {
     if (!activeSpecialityId) {
@@ -83,11 +114,20 @@ export function AnatomyExplainTab({ canonicalId }: AnatomyExplainTabProps) {
 
   if (loading) return <SkeletonLoader />;
   if (error) return <ErrorState message="Couldn't load explanation" onRetry={fetchExplanation} />;
-  if (!explanation) return null;
+  if (!display) return null;
 
-  const isUncertain = explanation.confidenceLabel === "UNCERTAIN";
-  const sources = explanation.citedSources ?? [];
-  const sourceCount = sources.length || explanation.citedChunkIds.length;
+  const text =
+    display.mode === "adaptive" ? display.adaptive.adaptedText : display.grounded.explanationText;
+  const sources: CitedSource[] =
+    (display.mode === "adaptive" ? display.adaptive.citations : display.grounded.citedSources) ?? [];
+  const citedChunkIds = display.mode === "grounded" ? display.grounded.citedChunkIds : [];
+  const citedClaimIds = display.mode === "grounded" ? display.grounded.citedClaimIds : [];
+  const confidenceLabel = display.mode === "grounded" ? display.grounded.confidenceLabel : null;
+  const contradictionNotice =
+    display.mode === "grounded" ? display.grounded.contradictionNotice : null;
+  const ahaFact = display.mode === "adaptive" ? display.adaptive.ahaFact : null;
+  const isUncertain = confidenceLabel === "UNCERTAIN";
+  const sourceCount = sources.length || citedChunkIds.length;
 
   return (
     <div className="flex flex-col gap-3 px-4 py-3">
@@ -98,14 +138,14 @@ export function AnatomyExplainTab({ canonicalId }: AnatomyExplainTabProps) {
         </div>
       )}
 
-      {evidenceMode && (
+      {evidenceMode && display.mode === "grounded" && (
         <div className="flex items-center gap-2">
           <span
             className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${
-              CONFIDENCE_STYLES[explanation.confidenceLabel] ?? ""
+              CONFIDENCE_STYLES[confidenceLabel ?? ""] ?? ""
             }`}
           >
-            {explanation.confidenceLabel}
+            {confidenceLabel}
           </span>
           {sourceCount > 0 && (
             <span className="text-[10px] text-text-muted">
@@ -124,20 +164,25 @@ export function AnatomyExplainTab({ canonicalId }: AnatomyExplainTabProps) {
         </div>
       )}
 
-      {explanation.contradictionNotice && (
+      {contradictionNotice && (
         <div className="rounded-lg border border-amber-400/30 bg-amber-400/5 p-3">
           <p className="text-xs text-amber-400 font-medium">Conflicting Evidence</p>
-          <p className="text-xs text-text-secondary mt-1">{explanation.contradictionNotice}</p>
+          <p className="text-xs text-text-secondary mt-1">{contradictionNotice}</p>
         </div>
       )}
 
-      <p className="text-sm leading-relaxed text-text-secondary whitespace-pre-line">
-        {explanation.explanationText}
-      </p>
+      <p className="text-sm leading-relaxed text-text-secondary whitespace-pre-line">{text}</p>
 
-      <p className="text-[10px] text-text-muted italic mt-1">
-        This is not medical advice.
-      </p>
+      {ahaFact && (
+        <p
+          className="text-sm italic"
+          style={{ color: "#5A2B94", fontFamily: "var(--font-display)" }}
+        >
+          {ahaFact}
+        </p>
+      )}
+
+      <p className="text-[10px] text-text-muted italic mt-1">This is not medical advice.</p>
 
       {sourceCount > 0 && (
         <div className="pt-1">
@@ -159,13 +204,11 @@ export function AnatomyExplainTab({ canonicalId }: AnatomyExplainTabProps) {
                       className="text-xs text-text-secondary border-l-2 border-border-subtle pl-2"
                     >
                       <span className="font-medium text-text-primary">{s.title}</span>
-                      {s.sourceType && (
-                        <span className="text-text-muted"> · {s.sourceType}</span>
-                      )}
+                      {s.sourceType && <span className="text-text-muted"> · {s.sourceType}</span>}
                       {s.freshness && <span className="text-text-muted"> · {s.freshness}</span>}
                     </li>
                   ))
-                : explanation.citedChunkIds.map((id) => (
+                : citedChunkIds.map((id) => (
                     <li
                       key={id}
                       className="text-[11px] font-mono text-text-muted border-l-2 border-border-subtle pl-2"
@@ -178,9 +221,9 @@ export function AnatomyExplainTab({ canonicalId }: AnatomyExplainTabProps) {
         </div>
       )}
 
-      {evidenceMode && explanation.citedClaimIds.length > 0 && (
+      {evidenceMode && citedClaimIds.length > 0 && (
         <div className="flex flex-wrap gap-1 pt-1">
-          {explanation.citedClaimIds.map((id) => (
+          {citedClaimIds.map((id) => (
             <span
               key={id}
               className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-surface-elevated text-text-muted"

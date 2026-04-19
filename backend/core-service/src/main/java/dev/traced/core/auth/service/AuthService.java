@@ -81,6 +81,8 @@ public class AuthService {
         out.put("email", user.getEmail());
         out.put("learning_activated", learningActivated);
         out.put("account_mode", "FREE");
+        // background always present — DB default is 'curious_adult' for existing rows.
+        out.put("background", profile == null ? "curious_adult" : profile.getBackground());
         if (profile != null && profile.getCurrentSystemId() != null) {
             out.put("current_system_id", profile.getCurrentSystemId().toString());
         }

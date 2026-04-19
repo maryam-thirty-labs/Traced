@@ -49,7 +49,7 @@ public class ProfileController {
     @PatchMapping("/me/preferences")
     public ResponseEntity<Map<String, String>> updatePreferences(
         Authentication auth,
-        @RequestBody PreferencesRequest request
+        @jakarta.validation.Valid @RequestBody PreferencesRequest request
     ) {
         UUID userId = (UUID) auth.getPrincipal();
         profileService.updatePreferences(userId, request);
