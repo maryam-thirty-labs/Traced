@@ -72,13 +72,18 @@ public class AuthService {
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
+        UserProfile profile = userProfileRepository.findByUserId(userId).orElse(null);
+        boolean learningActivated = profile != null && Boolean.TRUE.equals(profile.getLearningActivated());
+
         Map<String, Object> out = new java.util.HashMap<>();
         out.put("userId", user.getId().toString());
         out.put("displayName", user.getDisplayName());
         out.put("email", user.getEmail());
-        // Placeholder until Sprint 7 adds the column + Sprint 6/9 writes it.
-        out.put("learning_activated", false);
+        out.put("learning_activated", learningActivated);
         out.put("account_mode", "FREE");
+        if (profile != null && profile.getCurrentSystemId() != null) {
+            out.put("current_system_id", profile.getCurrentSystemId().toString());
+        }
         return out;
     }
 }

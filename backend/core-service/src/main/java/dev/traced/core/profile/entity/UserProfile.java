@@ -51,5 +51,12 @@ public class UserProfile {
     @Column(name = "university")
     private String university;
 
+    @Column(name = "learning_activated", nullable = false)
+    @Builder.Default
+    private Boolean learningActivated = false;
+
+    @Column(name = "current_system_id")
+    private UUID currentSystemId;
+
     // No currentLevel column — derived by LevelService, never persisted
 }
