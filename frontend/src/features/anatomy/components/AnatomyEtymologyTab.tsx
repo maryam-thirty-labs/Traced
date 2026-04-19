@@ -30,7 +30,18 @@ export function AnatomyEtymologyTab({ canonicalId, initialNextRoot }: Props) {
   const [nextRoot, setNextRoot] = useState<NextRootPreview | null>(initialNextRoot ?? null);
   const sentRef = useRef(false);
 
-  // Fire-the-dwell-write after DWELL_THRESHOLD_MS on first view per structure.
+  // Load next-root preview immediately on tab open so the footer never sits on "loading…".
+  useEffect(() => {
+    getNextAction()
+      .then((next) => {
+        if (next.nextRootPreview) setNextRoot(next.nextRootPreview);
+      })
+      .catch(() => {
+        // Silent — footer shows loading placeholder.
+      });
+  }, []);
+
+  // Fire the dwell write once, after DWELL_THRESHOLD_MS, on first view per structure.
   useEffect(() => {
     if (sentRef.current) return;
     const t = window.setTimeout(async () => {
@@ -38,11 +49,10 @@ export function AnatomyEtymologyTab({ canonicalId, initialNextRoot }: Props) {
       try {
         await markExplored(canonicalId, "EXPLORER");
         cacheExplored(canonicalId);
-        // Refresh next-action to pick up the new exploredStructureIds + root preview.
         const next = await getNextAction();
         if (next.nextRootPreview) setNextRoot(next.nextRootPreview);
       } catch {
-        // Silent — illumination will sync on next mount.
+        // Silent — illumination syncs on next mount.
       }
     }, DWELL_THRESHOLD_MS);
     return () => window.clearTimeout(t);
