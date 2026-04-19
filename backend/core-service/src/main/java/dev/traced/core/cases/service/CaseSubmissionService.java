@@ -7,8 +7,10 @@ import dev.traced.core.cases.entity.CaseQuestion;
 import dev.traced.core.cases.repository.CaseAttemptRepository;
 import dev.traced.core.cases.repository.CaseOptionRepository;
 import dev.traced.core.cases.repository.CaseQuestionRepository;
+import dev.traced.core.cases.repository.WeeklyCaseRepository;
 import dev.traced.core.common.EntityNotFoundException;
 import dev.traced.core.leaderboard.service.WeeklyXpSnapshotService;
+import dev.traced.core.lesson.service.LearningLoopService;
 import dev.traced.core.profile.entity.UserProfile;
 import dev.traced.core.profile.repository.UserProfileRepository;
 import dev.traced.core.progression.service.LevelService;
@@ -17,6 +19,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -26,6 +30,9 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class CaseSubmissionService {
 
+    private static final int WEEKLY_CASE_BASE_XP = 50;
+    private static final int WEEKLY_CASE_CORRECT_BONUS_XP = 25;
+
     private final CaseService caseService;
     private final CaseQuestionRepository caseQuestionRepository;
     private final CaseOptionRepository caseOptionRepository;
@@ -34,6 +41,8 @@ public class CaseSubmissionService {
     private final LevelService levelService;
     private final MasteryService masteryService;
     private final WeeklyXpSnapshotService weeklyXpSnapshotService;
+    private final WeeklyCaseRepository weeklyCaseRepository;
+    private final LearningLoopService learningLoopService;
 
     @Transactional
     public SubmissionResult submit(String caseId, UUID userProfileId, List<AnswerDto> answers) {
@@ -71,11 +80,31 @@ public class CaseSubmissionService {
         int total = questions.size();
         int score = Math.round((float) correct / total * 100);
         String outcome = score == 100 ? "CORRECT" : "INCORRECT";
-        int xpAwarded = outcome.equals("CORRECT") ? c.getXpReward() : 0;
 
-        // Update totalXp
+        // Weekly cases use participation-first XP (50 base + 25 bonus).
+        // Non-weekly cases keep the case-defined xpReward on correct only.
+        boolean isWeeklyCase = isCurrentWeeklyCase(c.getId());
+        int xpAwarded;
+        if (isWeeklyCase) {
+            xpAwarded = WEEKLY_CASE_BASE_XP
+                + (outcome.equals("CORRECT") ? WEEKLY_CASE_CORRECT_BONUS_XP : 0);
+        } else {
+            xpAwarded = outcome.equals("CORRECT") ? c.getXpReward() : 0;
+        }
+
         profile.setTotalXp(profile.getTotalXp() + xpAwarded);
         userProfileRepository.save(profile);
+
+        // On a correct weekly case, mark the linked structure as Seen (CASE source)
+        // and idempotently push through LearningLoopService so the explored matrix
+        // stays consistent.
+        if (isWeeklyCase && outcome.equals("CORRECT") && c.getLinkedAnatomy() != null) {
+            learningLoopService.markStructureSeen(
+                profile.getUserId(),
+                c.getLinkedAnatomy().getId(),
+                "CASE"
+            );
+        }
 
         // Write CaseAttempt — same transaction
         CaseAttempt attempt = CaseAttempt.builder()
@@ -106,6 +135,13 @@ public class CaseSubmissionService {
             correct,
             total
         );
+    }
+
+    private boolean isCurrentWeeklyCase(UUID caseUuid) {
+        LocalDate weekStart = LocalDate.now().with(DayOfWeek.MONDAY);
+        return weeklyCaseRepository.findByWeekStart(weekStart)
+            .map(wc -> wc.getCaseId().equals(caseUuid))
+            .orElse(false);
     }
 
     public record AnswerDto(String questionId, String selectedOptionKey) {}

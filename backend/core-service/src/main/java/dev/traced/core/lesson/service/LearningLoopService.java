@@ -421,6 +421,23 @@ public class LearningLoopService {
         activateIfNotAlready(userId);
     }
 
+    /**
+     * Marks a structure as Seen without setting Explored or activating the user.
+     * Used by weekly case completion (source = CASE) per the canonical event matrix.
+     */
+    @Transactional
+    public void markStructureSeen(UUID userId, UUID structureId, String source) {
+        Optional<AnatomyStructureProgress> existing =
+            structureProgressRepository.findByUserIdAndStructureId(userId, structureId);
+        if (existing.isPresent()) return;
+        structureProgressRepository.save(AnatomyStructureProgress.builder()
+            .userId(userId)
+            .structureId(structureId)
+            .firstSeenAt(LocalDateTime.now())
+            .firstSource(source == null ? "CASE" : source)
+            .build());
+    }
+
     @Transactional
     public boolean activateIfNotAlready(UUID userId) {
         Optional<UserProfile> profile = userProfileRepository.findByUserId(userId);
