@@ -13,6 +13,7 @@ public record NextActionDto(
     NextRootPreview nextRootPreview,
     UUID currentSystemId,
     List<UUID> exploredStructureIds,
+    List<String> exploredCanonicalIds,
     boolean onboardingCompleted
 ) {
     @Builder

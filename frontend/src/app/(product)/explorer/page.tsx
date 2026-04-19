@@ -18,6 +18,7 @@ import { SystemTiles } from "@/features/anatomy/components/SystemTiles";
 import { listKnownStructures } from "@/features/anatomy/lib/anatomogramAdapter";
 import { useMe } from "@/shared/lib/auth/MeContext";
 import type { AnatomySystem } from "@/features/anatomy/types/anatomy.types";
+import { getNextAction } from "@/features/learning/lib/learningApi";
 
 const KNOWN_SYSTEMS: AnatomySystem[] = [
   "cardiovascular", "respiratory", "nervous", "digestive",
@@ -50,7 +51,7 @@ export default function ExplorerPage() {
   const regionalMode = searchParams.get("mode") === "regional";
   const [focusCanonicalIds, setFocusCanonicalIds] = useState<Set<string>>(new Set());
   const [shouldPulseHeart, setShouldPulseHeart] = useState(false);
-  const [illuminated] = useState<Set<string>>(() => {
+  const [illuminated, setIlluminated] = useState<Set<string>>(() => {
     if (typeof window === "undefined") return new Set();
     try {
       const raw = localStorage.getItem(EXPLORED_CACHE_KEY);
@@ -60,6 +61,24 @@ export default function ExplorerPage() {
       return new Set();
     }
   });
+
+  // Backend is source of truth for explored structures — refresh on mount and
+  // when the drawer closes (which is when dwell writes most recently fired).
+  useEffect(() => {
+    getNextAction()
+      .then((next) => {
+        const fresh = new Set(next.exploredCanonicalIds ?? []);
+        setIlluminated(fresh);
+        try {
+          localStorage.setItem(EXPLORED_CACHE_KEY, JSON.stringify([...fresh]));
+        } catch {
+          // cache unavailable
+        }
+      })
+      .catch(() => {
+        // Silent — localStorage cache already in state.
+      });
+  }, [selectedCanonicalId]);
   const idleTimer = useRef<number | null>(null);
 
   const activated = me?.learning_activated === true;

@@ -82,7 +82,7 @@ export function AnatomyDetailDrawer({
 
           <TabGroup tabs={[...TABS]} activeTab={activeTab} onTabChange={setActiveTab} />
 
-          {activeTab === "Etymology" && <AnatomyEtymologyTab />}
+          {activeTab === "Etymology" && <AnatomyEtymologyTab canonicalId={canonicalId} />}
           {activeTab === "Diseases" && <AnatomyDiseasesTab diseases={part.diseases} />}
           {activeTab === "Names" && <AnatomyNamesTab aliases={part.aliases} />}
           {activeTab === "Mechanisms" && <AnatomyMechanismsTab mechanisms={part.mechanisms} />}

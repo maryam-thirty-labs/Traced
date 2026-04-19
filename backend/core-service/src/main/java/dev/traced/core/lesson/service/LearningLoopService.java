@@ -445,6 +445,11 @@ public class LearningLoopService {
         for (AnatomyStructureProgress p : progress) {
             if (p.getExploredAt() != null) exploredIds.add(p.getStructureId());
         }
+        List<String> exploredCanonicalIds = exploredIds.isEmpty()
+            ? List.of()
+            : anatomyPartRepository.findByIdIn(exploredIds).stream()
+                .map(dev.traced.core.anatomy.entity.AnatomyPart::getCanonicalId)
+                .toList();
 
         UserProfile profile = userProfileRepository.findByUserId(userId).orElse(null);
         Integer streakDays = profile == null ? 0 : profile.getCurrentStreak();
@@ -458,6 +463,7 @@ public class LearningLoopService {
             .nextRootPreview(null) // Sprint 22 wires real content.
             .currentSystemId(currentSystemId)
             .exploredStructureIds(exploredIds)
+            .exploredCanonicalIds(exploredCanonicalIds)
             .onboardingCompleted(onboardingCompleted)
             .build();
     }
