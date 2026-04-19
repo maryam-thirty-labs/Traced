@@ -1,10 +1,5 @@
-import { DiseasePageClient } from "@/features/disease/components/DiseasePageClient";
+import { ComingSoon } from "@/shared/ui/ComingSoon";
 
-type PageProps = {
-  params: Promise<{ diseaseCanonicalId: string }>;
-};
-
-export default async function DiseasePage({ params }: PageProps) {
-  const { diseaseCanonicalId } = await params;
-  return <DiseasePageClient diseaseCanonicalId={diseaseCanonicalId} />;
+export default function DiseasePage() {
+  return <ComingSoon />;
 }

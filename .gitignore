@@ -6,6 +6,7 @@ SPRINT_PLAN.md
 node_modules/
 .next/
 out/
+tsconfig.tsbuildinfo
 .env
 .env.local
 .env.*.local

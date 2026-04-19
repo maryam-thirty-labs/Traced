@@ -8,13 +8,15 @@ import {
   getFriendsLeaderboard,
   getMyRank,
 } from "../lib/leaderboardApi";
-import type { LeaderboardEntry, Period, Scope } from "../types/leaderboard.types";
+import type { LeaderboardEntry, Scope } from "../types/leaderboard.types";
 
 const TABS: { key: Scope; label: string }[] = [
   { key: "global", label: "Global" },
   { key: "university", label: "My university" },
   { key: "friends", label: "Friends" },
 ];
+
+const LEADERBOARD_PERIOD = "alltime" as const;
 
 function EntryRow({ entry }: { entry: LeaderboardEntry }) {
   return (
@@ -54,7 +56,6 @@ function EntryRow({ entry }: { entry: LeaderboardEntry }) {
 
 export function LeaderboardSection({ userUniversity }: { userUniversity: string | null }) {
   const [scope, setScope] = useState<Scope>("global");
-  const [period, setPeriod] = useState<Period>("weekly");
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
   const [myRankEntry, setMyRankEntry] = useState<LeaderboardEntry | null>(null);
   const [loading, setLoading] = useState(true);
@@ -63,12 +64,12 @@ export function LeaderboardSection({ userUniversity }: { userUniversity: string 
     setLoading(true);
     try {
       let list: LeaderboardEntry[] = [];
-      if (scope === "global") list = await getGlobalLeaderboard(period);
-      else if (scope === "university") list = await getUniversityLeaderboard(period);
-      else if (scope === "friends") list = await getFriendsLeaderboard(period);
+      if (scope === "global") list = await getGlobalLeaderboard(LEADERBOARD_PERIOD);
+      else if (scope === "university") list = await getUniversityLeaderboard(LEADERBOARD_PERIOD);
+      else if (scope === "friends") list = await getFriendsLeaderboard(LEADERBOARD_PERIOD);
       setEntries(list);
 
-      const my = await getMyRank(period, scope);
+      const my = await getMyRank(LEADERBOARD_PERIOD, scope);
       setMyRankEntry(my.me ?? null);
     } catch {
       setEntries([]);
@@ -76,7 +77,7 @@ export function LeaderboardSection({ userUniversity }: { userUniversity: string 
     } finally {
       setLoading(false);
     }
-  }, [scope, period]);
+  }, [scope]);
 
   useEffect(() => {
     fetchData();
@@ -88,12 +89,6 @@ export function LeaderboardSection({ userUniversity }: { userUniversity: string 
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-semibold text-text-primary">Leaderboard</h3>
-        <button
-          onClick={() => setPeriod((p) => (p === "weekly" ? "alltime" : "weekly"))}
-          className="text-[10px] font-medium px-2 py-0.5 rounded bg-surface-elevated text-text-secondary hover:text-text-primary"
-        >
-          {period === "weekly" ? "This week" : "All time"}
-        </button>
       </div>
 
       <div className="flex gap-1 border-b border-border-subtle">
