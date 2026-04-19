@@ -14,7 +14,7 @@ import java.util.UUID;
 @Service
 public class JwtService {
 
-    @Value("${traced.jwt.secret:traced-default-secret-key-change-in-production-min-32-chars}")
+    @Value("${traced.jwt.secret}")
     private String secret;
 
     @Value("${traced.jwt.expiration-ms:86400000}")
