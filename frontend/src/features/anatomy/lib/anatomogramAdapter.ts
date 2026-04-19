@@ -57,3 +57,25 @@ export function resolveCanonicalId(anatomogramId: string): string | null {
 export function getSupportedAnatomogramIds(system: AnatomySystem): string[] {
   return SYSTEM_ANATOMOGRAM_IDS[system] ?? [];
 }
+
+export function resolveAnatomogramId(canonicalId: string): string | null {
+  for (const [anatomogramId, canonical] of Object.entries(ANATOMOGRAM_TO_CANONICAL)) {
+    if (canonical === canonicalId) return anatomogramId;
+  }
+  return null;
+}
+
+/** Derives a human display name from a canonical ID like "ANAT_HEART_001" -> "Heart". */
+export function canonicalDisplayName(canonicalId: string): string {
+  const parts = canonicalId.split("_");
+  const middle = parts.slice(1, -1).join(" ").toLowerCase();
+  return middle.charAt(0).toUpperCase() + middle.slice(1);
+}
+
+/** All {canonicalId, displayName} known to the adapter. Used for client-side search fallback. */
+export function listKnownStructures(): Array<{ canonicalId: string; displayName: string }> {
+  return Object.values(ANATOMOGRAM_TO_CANONICAL).map((canonicalId) => ({
+    canonicalId,
+    displayName: canonicalDisplayName(canonicalId),
+  }));
+}

@@ -76,3 +76,21 @@
     box-shadow: none;
   }
 }
+
+/* Ambient-onboarding pulse for the default organ (heart) on first visit. */
+@keyframes organ-pulse {
+  0%, 100% { filter: drop-shadow(0 0 0 rgba(124, 92, 252, 0)); opacity: 0.6; }
+  50%      { filter: drop-shadow(0 0 10px rgba(124, 92, 252, 0.85)); opacity: 1; }
+}
+
+.organ-pulse {
+  animation: organ-pulse 1.6s ease-in-out infinite;
+  transform-origin: center;
+  transform-box: fill-box;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .organ-pulse {
+    animation: none;
+  }
+}

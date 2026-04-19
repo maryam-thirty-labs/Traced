@@ -13,6 +13,10 @@ type AnatomogramCanvasProps = {
   onPartSelect: (canonicalId: string | null) => void;
   /** When non-empty, only these canonical IDs are highlighted; others dim further. */
   specialityFocusCanonicalIds?: Set<string>;
+  /** Anatomogram ID of the organ to pulse (ambient onboarding). */
+  pulseAnatomogramId?: string | null;
+  /** Canonical IDs of structures the user has explored — rendered with brighter stroke. */
+  illuminatedCanonicalIds?: Set<string>;
 };
 
 const HIGHLIGHT_COLOR = "#7c5cfc";
@@ -28,6 +32,8 @@ export function AnatomogramCanvas({
   selectedCanonicalId,
   onPartSelect,
   specialityFocusCanonicalIds,
+  pulseAnatomogramId,
+  illuminatedCanonicalIds,
 }: AnatomogramCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);
@@ -109,27 +115,52 @@ export function AnatomogramCanvas({
 
       const canonicalId = resolveCanonicalId(id);
       const isSelected = id === selectedAnatomogramId;
+      const isIlluminated = canonicalId !== null
+        && (illuminatedCanonicalIds?.has(canonicalId) ?? false);
       const isSpecialityFocus = hasSpecialityFilter && canonicalId !== null
         && specialityFocusCanonicalIds!.has(canonicalId);
       const shouldDim = hasSpecialityFilter && !isSpecialityFocus && !isSelected;
+      const isPulsing = id === pulseAnatomogramId && !isSelected;
 
       el.style.opacity = isSelected
         ? SELECT_OPACITY
         : shouldDim
           ? DIM_OPACITY
-          : SHOW_OPACITY;
+          : isIlluminated
+            ? SELECT_OPACITY
+            : SHOW_OPACITY;
       el.style.cursor = shouldDim ? "default" : "pointer";
+      el.classList.toggle("organ-pulse", isPulsing);
 
-      // Color the paths inside this group
+      const fillColor = isSelected
+        ? SELECT_COLOR
+        : isIlluminated
+          ? SELECT_COLOR
+          : HIGHLIGHT_COLOR;
+
       const paths = el.querySelectorAll<SVGElement>("path, circle, ellipse, rect");
       if (paths.length > 0) {
         paths.forEach((p) => {
-          p.style.fill = isSelected ? SELECT_COLOR : HIGHLIGHT_COLOR;
+          p.style.fill = fillColor;
           p.style.transition = "fill 0.2s";
         });
       } else {
-        // The element itself is the path
-        el.style.fill = isSelected ? SELECT_COLOR : HIGHLIGHT_COLOR;
+        el.style.fill = fillColor;
+      }
+
+      // Hover label via SVG <title> (native tooltip)
+      if (canonicalId) {
+        let titleEl = el.querySelector<SVGTitleElement>(":scope > title");
+        if (!titleEl) {
+          titleEl = document.createElementNS("http://www.w3.org/2000/svg", "title");
+          el.prepend(titleEl);
+        }
+        titleEl.textContent = canonicalId
+          .split("_")
+          .slice(1, -1)
+          .join(" ")
+          .toLowerCase()
+          .replace(/^\w/, (c) => c.toUpperCase());
       }
 
       el.onclick = (e) => {
@@ -140,7 +171,15 @@ export function AnatomogramCanvas({
 
     // Click on empty area clears selection
     svg.onclick = () => onPartSelect(null);
-  }, [supportedIds, selectedAnatomogramId, handleClick, onPartSelect, specialityFocusCanonicalIds]);
+  }, [
+    supportedIds,
+    selectedAnatomogramId,
+    handleClick,
+    onPartSelect,
+    specialityFocusCanonicalIds,
+    pulseAnatomogramId,
+    illuminatedCanonicalIds,
+  ]);
 
   return (
     <div
