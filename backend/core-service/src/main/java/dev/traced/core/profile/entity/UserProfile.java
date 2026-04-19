@@ -65,5 +65,12 @@ public class UserProfile {
     @Column(name = "streak_freeze_used_week")
     private Integer streakFreezeUsedWeek;
 
+    @Column(name = "reminder_time", length = 8)
+    private String reminderTime;
+
+    @Column(name = "notifications_enabled", nullable = false)
+    @Builder.Default
+    private Boolean notificationsEnabled = false;
+
     // No currentLevel column — derived by LevelService, never persisted
 }
