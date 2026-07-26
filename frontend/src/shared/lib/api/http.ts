@@ -1,6 +1,9 @@
 import { getToken } from "@/shared/lib/auth/auth";
+import { isDemoMode } from "./demoMode";
+import { tryResolveDemoRequest } from "./demoRouter";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
+const DEMO_LATENCY_MS = 300;
 
 export class ApiError extends Error {
   constructor(
@@ -14,6 +17,15 @@ export class ApiError extends Error {
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  if (isDemoMode()) {
+    const method = (init?.method ?? "GET") as "GET" | "POST" | "PATCH" | "DELETE";
+    const body = init?.body ? JSON.parse(init.body as string) : undefined;
+    await new Promise((resolve) => setTimeout(resolve, DEMO_LATENCY_MS));
+    const result = tryResolveDemoRequest(method, path, body);
+    if (result.handled) return result.data as T;
+    throw new ApiError(501, "Not implemented in demo mode", null);
+  }
+
   const token = getToken();
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
